@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36623.8 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KeywordDriven", "KeywordDriven\KeywordDriven.csproj", "{6E393F9F-568F-4C9C-8AAC-942790244D5D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KeywordDriven.TestExplorer", "KeywordDriven.TestExplorer\KeywordDriven.TestExplorer.csproj", "{34FDBBFA-C2B1-4E99-A622-B9D6EEB8C4C1}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6E393F9F-568F-4C9C-8AAC-942790244D5D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6E393F9F-568F-4C9C-8AAC-942790244D5D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6E393F9F-568F-4C9C-8AAC-942790244D5D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6E393F9F-568F-4C9C-8AAC-942790244D5D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{34FDBBFA-C2B1-4E99-A622-B9D6EEB8C4C1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{34FDBBFA-C2B1-4E99-A622-B9D6EEB8C4C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{34FDBBFA-C2B1-4E99-A622-B9D6EEB8C4C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{34FDBBFA-C2B1-4E99-A622-B9D6EEB8C4C1}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F847AA42-B1C6-4A89-B694-EBD2D9E1D1C2}
+	EndGlobalSection
+EndGlobal
