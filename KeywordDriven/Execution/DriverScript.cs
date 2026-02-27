@@ -1,130 +1,183 @@
-﻿using System;
-using System.Reflection;
+﻿using System.Reflection;
 using KeywordDriven.Config;
 using KeywordDriven.Utils;
 using KeywordDriven.ActionKeywords;
 
 namespace KeywordDriven.Execution
 {
+    public enum Outcome
+    {
+        Pass,
+        Fail,
+        Error
+    }
+
+    enum RunMode
+    {
+        Yes,
+        No
+    }   
+
     public class DriverScript
     {
-        static Keywords actionKeywords;
-        static String sActionKeyword;
-        static String sPageObject;
-        static MethodInfo[] method;
-        static int iTestStep;
-        static int iTestLastStep;
-        static String sTestCaseID;
-        static String sTestCaseTitle;
-        static String sTestCaseDesc;
-        static String sTestStepDesc;
-        static String sRunMode;
-        static String sData;
-        internal static int iOutcome; // 1-Pass 2-Fail 3-Error
-        internal static bool bOutcomeFail;
-        internal static bool bOutcomeError;
+        //Public action keywords class object
+        internal static Keywords actionKeywords;
+
+        //reflection class object
+        internal static MethodInfo[] method;
+
+        internal static string actionKeyword;
+        internal static string pageObject;
+
+        internal static int testStep;
+        internal static int testLastStep;
+        internal static string testCaseID;
+        internal static string testCaseTitle;
+        internal static string testCaseDesc;
+        internal static string testStepDesc;
+        internal static string runMode;
+        internal static string data;
+
+        internal static int outcome;
 
         static DriverScript()
         {
             actionKeywords = new Keywords();
-            method = actionKeywords.GetType().GetMethods();
         }
 
         public static void Execute_TestCases()
         {
-            int iTotalTestCases = ExcelManager.GetRowCount(ExcelSetting.Sheet_TestCases);
-            for (int iTestcase = 1; iTestcase < iTotalTestCases; iTestcase++)
+            // get the total number of testcases from the TestCases sheet
+            int totalTestCases = ExcelManager.GetRowCount(ExcelSetting.Sheet_TestCases);
+
+            // This loop will execute number of times equal to total number of test cases
+            for (int iTestcase = 1; iTestcase < totalTestCases; iTestcase++)
             {
-                iOutcome = 1;
-                bOutcomeFail = false;
+                outcome = (int)Outcome.Pass;
 
-                sTestCaseID = ExcelManager.GetCellData(iTestcase, ExcelSetting.Col_TestCases_ID, ExcelSetting.Sheet_TestCases);
-                sTestCaseTitle = ExcelManager.GetCellData(iTestcase, ExcelSetting.Col_TestCases_Title, ExcelSetting.Sheet_TestCases);
-                sTestCaseDesc = ExcelManager.GetCellData(iTestcase, ExcelSetting.Col_TestCases_Description, ExcelSetting.Sheet_TestCases);
-                sRunMode = ExcelManager.GetCellData(iTestcase, ExcelSetting.Col_TestCases_RunMode, ExcelSetting.Sheet_TestCases);
+                //get the testcase ID,Title,Description and run mode for the current test case from the TestCases sheet
+                testCaseID = ExcelManager.GetCellData(iTestcase, ExcelSetting.Col_TestCases_ID, ExcelSetting.Sheet_TestCases);
+                testCaseTitle = ExcelManager.GetCellData(iTestcase, ExcelSetting.Col_TestCases_Title, ExcelSetting.Sheet_TestCases);
+                testCaseDesc = ExcelManager.GetCellData(iTestcase, ExcelSetting.Col_TestCases_Description, ExcelSetting.Sheet_TestCases);
+                runMode = ExcelManager.GetCellData(iTestcase, ExcelSetting.Col_TestCases_RunMode, ExcelSetting.Sheet_TestCases);
 
-                if (sRunMode.Equals("Yes"))
+                if (runMode != null && runMode.Equals(RunMode.Yes.ToString()))
                 {
-                    Log.StartTestCase(sTestCaseID);
-                    ExtentReporter.CreateTest(sTestCaseID + "_" + sTestCaseTitle, sTestCaseDesc);
-                    ExtentReporter.StartTestCase(sTestCaseID + "_" + sTestCaseTitle);
-                    iTestStep = ExcelManager.GetRowContains(sTestCaseID, ExcelSetting.Col_TestSteps_TestCaseID, ExcelSetting.Sheet_TestSteps);
-                    iTestLastStep = ExcelManager.GetTestStepsCount(ExcelSetting.Sheet_TestSteps, sTestCaseID, iTestStep);
-                    iOutcome = 1;
-                    bOutcomeFail = false;
+                    Log.StartTestCase(testCaseID);
+                    ExtentReporter.CreateTest(testCaseID + "_" + testCaseTitle, testCaseDesc);
+                    ExtentReporter.StartTestCase(testCaseID + "_" + testCaseTitle);
 
-                    for (; iTestStep < iTestLastStep; iTestStep++)
+                    //get the first and last test step number for the current test case
+                    testStep = ExcelManager.GetRowContains(testCaseID, ExcelSetting.Col_TestSteps_TestCaseID, ExcelSetting.Sheet_TestSteps);
+                    testLastStep = ExcelManager.GetTestStepsCount(ExcelSetting.Sheet_TestSteps, testCaseID, testStep);
+
+                    outcome = (int)Outcome.Pass;
+
+                    // This loop will execute number of times equal to total number of test steps for the current test case
+                    for (; testStep < testLastStep; testStep++)
                     {
-                        sActionKeyword = ExcelManager.GetCellData(iTestStep, ExcelSetting.Col_TestSteps_ActionKeyword, ExcelSetting.Sheet_TestSteps);
-                        sPageObject = ExcelManager.GetCellData(iTestStep, ExcelSetting.Col_TestSteps_PageObject, ExcelSetting.Sheet_TestSteps);
-                        sData = ExcelManager.GetCellData(iTestStep, ExcelSetting.Col_TestSteps_TestData, ExcelSetting.Sheet_TestSteps);
-                        sTestStepDesc = ExcelManager.GetCellData(iTestStep, ExcelSetting.Col_TestSteps_Description, ExcelSetting.Sheet_TestSteps);
-                        ExtentReporter.CreateNode(sTestStepDesc);
+                        //get the value of column ActionKeyword, pageObject, DataSet and Description for the current test step from the TestSteps sheet
+                        actionKeyword = ExcelManager.GetCellData(testStep, ExcelSetting.Col_TestSteps_ActionKeyword, ExcelSetting.Sheet_TestSteps);
+                        pageObject = ExcelManager.GetCellData(testStep, ExcelSetting.Col_TestSteps_PageObject, ExcelSetting.Sheet_TestSteps);
+                        data = ExcelManager.GetCellData(testStep, ExcelSetting.Col_TestSteps_TestData, ExcelSetting.Sheet_TestSteps);
+                        testStepDesc = ExcelManager.GetCellData(testStep, ExcelSetting.Col_TestSteps_Description, ExcelSetting.Sheet_TestSteps);
+
+                        ExtentReporter.CreateNode(testStepDesc);
+
+                        //call the method to execute the action keyword for the current test step
                         Execute_Actions();
 
-                        if (iOutcome == 3)
+                        //check The Fail results for the current test step and set the overall test case result as Fail if any test step has Fail result
+                        if (outcome == (int)Outcome.Fail)
                         {
-                            ExcelManager.SetCellData("Error", iTestcase, ExcelSetting.Col_TestCases_Result, ExcelSetting.Sheet_TestCases);
-                            Log.EndTestCase(sTestCaseID);
-                            ExtentReporter.Error("TestCase " + sTestCaseID + "_" + sTestCaseTitle + " Error");
-                            ExtentReporter.EndTestCase(sTestCaseID + "_" + sTestCaseTitle);
+                            ExcelManager.SetCellData(Outcome.Fail.ToString(), iTestcase, ExcelSetting.Col_TestCases_Result, ExcelSetting.Sheet_TestCases);
+
+                            Log.EndTestCase(testCaseID);
+                            ExtentReporter.Error($"TestCase {testCaseID}_{testCaseTitle} {Outcome.Fail.ToString()}");
+                            ExtentReporter.EndTestCase(testCaseID + "_" + testCaseTitle);
+                            break;
+                        }
+                        //check The Error results for the current test step and set the overall test case result as Error if any test step has Error result
+                        else if (outcome == (int)Outcome.Error)
+                        {
+                            ExcelManager.SetCellData(Outcome.Error.ToString(), iTestcase, ExcelSetting.Col_TestCases_Result, ExcelSetting.Sheet_TestCases);
+
+                            Log.EndTestCase(testCaseID);
+                            ExtentReporter.Error($"TestCase {testCaseID}_{testCaseTitle} {Outcome.Error.ToString()}");
+                            ExtentReporter.EndTestCase(testCaseID + "_" + testCaseTitle);
                             break;
                         }
                     }
 
-                    if (iOutcome == 1 && bOutcomeFail==false)
+                    //check if all results is Pass for the current test case and set the overall test case result as Pass
+                    if (outcome == (int)Outcome.Pass)
                     {
-                        ExcelManager.SetCellData("Pass", iTestcase, ExcelSetting.Col_TestCases_Result, ExcelSetting.Sheet_TestCases);
-                        Log.EndTestCase(sTestCaseID);
-                        ExtentReporter.Pass("TestCase " + sTestCaseID + "_" + sTestCaseTitle + " Passed");
-                        ExtentReporter.EndTestCase(sTestCaseID + "_" + sTestCaseTitle);
+                        ExcelManager.SetCellData(Outcome.Pass.ToString(), iTestcase, ExcelSetting.Col_TestCases_Result, ExcelSetting.Sheet_TestCases);
+
+                        Log.EndTestCase(testCaseID);
+                        ExtentReporter.Pass($"TestCase {testCaseID}_{testCaseTitle} {Outcome.Pass.ToString()}");
+                        ExtentReporter.EndTestCase(testCaseID + "_" + testCaseTitle);
                     }
-                    else if (iOutcome == 1 && bOutcomeFail == true)
+                    //check if any results is Fail for the current test case and set the overall test case result as Fail
+                    else if (outcome == (int)Outcome.Fail)
                     {
-                        ExcelManager.SetCellData("Fail", iTestcase, ExcelSetting.Col_TestCases_Result, ExcelSetting.Sheet_TestCases);
-                        Log.EndTestCase(sTestCaseID);
-                        ExtentReporter.Fail("TestCase " + sTestCaseID + "_" + sTestCaseTitle + " Failed");
-                        ExtentReporter.EndTestCase(sTestCaseID + "_" + sTestCaseTitle);
+                        ExcelManager.SetCellData(Outcome.Fail.ToString(), iTestcase, ExcelSetting.Col_TestCases_Result, ExcelSetting.Sheet_TestCases);
+
+                        Log.EndTestCase(testCaseID);
+                        ExtentReporter.Fail($"TestCase {testCaseID}_{testCaseTitle} {Outcome.Fail.ToString()}");
+                        ExtentReporter.EndTestCase(testCaseID + "_" + testCaseTitle);
                     }
-                    else if (iOutcome == 2)
+                    //check if any results is Error for the current test case and set the overall test case result as Error
+                    else if (outcome == (int)Outcome.Error)
                     {
-                        ExcelManager.SetCellData("Fail", iTestcase, ExcelSetting.Col_TestCases_Result, ExcelSetting.Sheet_TestCases);
-                        Log.EndTestCase(sTestCaseID);
-                        ExtentReporter.Fail("TestCase " + sTestCaseID + "_" + sTestCaseTitle + " Failed");
-                        ExtentReporter.EndTestCase(sTestCaseID + "_" + sTestCaseTitle);
+                        ExcelManager.SetCellData(Outcome.Error.ToString(), iTestcase, ExcelSetting.Col_TestCases_Result, ExcelSetting.Sheet_TestCases);
+
+                        Log.EndTestCase(testCaseID);
+                        ExtentReporter.Error($"TestCase {testCaseID}_{testCaseTitle} {Outcome.Error.ToString()}");
+                        ExtentReporter.EndTestCase(testCaseID + "_" + testCaseTitle);
                     }
-                }                
+                }
             }
         }
 
         static void Execute_Actions()
         {
-            for (int i = 0; i < method.Length; i++)
+
+            if (actionKeyword != null)
             {
+                // the reflection class to invoke ActionKeyword methods based on actionKeyword variable value
+                MethodInfo method = actionKeywords.GetType().GetMethod(actionKeyword);
 
-                if (method[i].Name.Equals(sActionKeyword))
+                if (method != null)
                 {
-                    method[i].Invoke(actionKeywords, new object[] { sPageObject, sData });
+                    // Passing PageObject and data as Arguments to this class instance
+                    string[] args = { pageObject, data };
+                    method.Invoke(actionKeywords, args);
+                }
+                else
+                {
+                    Log.Error("Action Keyword: " + actionKeyword + " not found.");
+                    outcome = (int)Outcome.Error;
+                }
 
-                    if (iOutcome == 1)
-                    {
-                        ExcelManager.SetCellData("Pass", iTestStep, ExcelSetting.Col_TestSteps_Result, ExcelSetting.Sheet_TestSteps);
-                        ExtentReporter.Pass(sTestStepDesc);
-                        break;
-                    }
-                    else if (iOutcome == 2)
-                    {
-                        ExcelManager.SetCellData("Fail", iTestStep, ExcelSetting.Col_TestSteps_Result, ExcelSetting.Sheet_TestSteps);
-                        ExtentReporter.Fail(sTestStepDesc);
-                        break;
-                    }
-                    else if (iOutcome == 3)
-                    {
-                        ExcelManager.SetCellData("Error", iTestStep, ExcelSetting.Col_TestSteps_Result, ExcelSetting.Sheet_TestSteps);
-                        ExtentReporter.Error(sTestStepDesc);
-                        Keywords.CloseBrowser("", "");
-                        break;
-                    }
+                if (outcome == (int)Outcome.Pass)
+                {
+                    ExcelManager.SetCellData(Outcome.Pass.ToString(), testStep, ExcelSetting.Col_TestSteps_Result, ExcelSetting.Sheet_TestSteps);
+                    ExtentReporter.Pass(testStepDesc);
+                }
+                else if (outcome == (int)Outcome.Fail)
+                {
+                    ExcelManager.SetCellData(Outcome.Fail.ToString(), testStep, ExcelSetting.Col_TestSteps_Result, ExcelSetting.Sheet_TestSteps);
+                    ExtentReporter.Fail(testStepDesc);
+
+                    Keywords.CloseBrowser("", "");
+                }
+                else if (outcome == (int)Outcome.Error)
+                {
+                    ExcelManager.SetCellData(Outcome.Error.ToString(), testStep, ExcelSetting.Col_TestSteps_Result, ExcelSetting.Sheet_TestSteps);
+                    ExtentReporter.Error(testStepDesc);
+
+                    Keywords.CloseBrowser("", "");
                 }
             }
         }

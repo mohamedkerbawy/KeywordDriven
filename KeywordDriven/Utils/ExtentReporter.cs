@@ -1,7 +1,6 @@
 ﻿using System;
 using AventStack.ExtentReports;
 using AventStack.ExtentReports.Reporter;
-using AventStack.ExtentReports.Reporter.Config;
 
 namespace KeywordDriven.Utils
 {
@@ -27,7 +26,6 @@ namespace KeywordDriven.Utils
 
         internal static void CreateTest(String sTestCaseID, String sTestCaseTitle)
         {
-            //testcase = extent.CreateTest("TestCase: " + sTestCaseID, "Title: " + sTestCaseTitle);
             testcase = extent.CreateTest(sTestCaseID,sTestCaseTitle);
         }
 

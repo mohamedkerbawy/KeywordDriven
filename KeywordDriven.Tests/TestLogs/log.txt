@@ -1,0 +1,13 @@
+Starting timestamp: 2/22/2026 8:46:33 AM
+[INFO]: Start TestCase TS1
+[INFO]: Opening Browser "Chrome"
+[ERROR]: Failed OpenBrowser | Exception: session not created: This version of ChromeDriver only supports Chrome version 130
+Current browser version is 144.0.7559.133 with binary path C:\Program Files\Google\Chrome\Application\chrome.exe (SessionNotCreated)
+[INFO]: End TestCase TS1
+-------------------------
+[INFO]: Start TestCase TS2
+[INFO]: Opening Browser "Chrome"
+[ERROR]: Failed OpenBrowser | Exception: session not created: This version of ChromeDriver only supports Chrome version 130
+Current browser version is 144.0.7559.133 with binary path C:\Program Files\Google\Chrome\Application\chrome.exe (SessionNotCreated)
+[INFO]: End TestCase TS2
+-------------------------
