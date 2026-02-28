@@ -7,7 +7,7 @@ using OpenQA.Selenium.Firefox;
 using OpenQA.Selenium.Remote;
 using KeywordDriven.Config;
 using KeywordDriven.Utils;
-using KeywordDriven.Execution; /////SHOULD REMOVED/////
+using KeywordDriven.Execution;
 
 namespace KeywordDriven.ActionKeywords
 {
@@ -139,6 +139,7 @@ namespace KeywordDriven.ActionKeywords
     public partial class Keywords
     {
         #region Keywords methods
+
         public static void OpenBrowser(String obj, String data)
         {
             Log.Info($"Opening Browser \"{data}\"");
@@ -159,7 +160,7 @@ namespace KeywordDriven.ActionKeywords
                 DriverScript.outcome = (int) Outcome.Error;
             }
         }
-
+        
         public static void CloseBrowser(String obj, String data)
         {
             try
@@ -184,7 +185,12 @@ namespace KeywordDriven.ActionKeywords
                 DriverScript.outcome = (int) Outcome.Error;
             }
         }
+        
+        public static void CloseAllBrowser(String obj, String data)
+        {
 
+        }
+        
         public static void RefreshBrowser(String obj, String data)
         {
             try
@@ -203,7 +209,10 @@ namespace KeywordDriven.ActionKeywords
                 DriverScript.outcome = (int) Outcome.Error;
             }
         }
-
+        
+        public static void MaximizeBrowser(String obj, String data)
+        { }
+        
         public static void NavigateToURL(String obj, String data)
         {
             try
@@ -237,7 +246,7 @@ namespace KeywordDriven.ActionKeywords
                 DriverScript.outcome = (int) Outcome.Error;
             }
         }
-
+        
         public static void NavigateBack(String obj, String data)
         {
             try
@@ -260,7 +269,7 @@ namespace KeywordDriven.ActionKeywords
                 DriverScript.outcome = (int) Outcome.Error;
             }
         }
-
+        
         public static void NavigateForward(String obj, String data)
         {
             try
@@ -283,6 +292,12 @@ namespace KeywordDriven.ActionKeywords
                 DriverScript.outcome = (int) Outcome.Error;
             }
         }
+        
+        public static void RefreshPage(String obj, String data)
+        { }
+        
+        public static void SetWindowSize(String obj, String data)
+        { }
 
         #endregion
     }

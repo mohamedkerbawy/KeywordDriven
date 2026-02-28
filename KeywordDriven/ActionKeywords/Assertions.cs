@@ -2,7 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using OpenQA.Selenium;
 using KeywordDriven.Utils;
-using KeywordDriven.Execution; /////SHOULD REMOVED/////
+using KeywordDriven.Execution;
 
 namespace KeywordDriven.ActionKeywords
 {
@@ -49,7 +49,38 @@ namespace KeywordDriven.ActionKeywords
     public partial class Keywords
     {
         #region Keywords methods
-        public static void AssertTextPresent(String obj, String data)
+
+        public static void AssertElementExists(String obj, String data)
+        {
+
+        }
+        
+        public static void AssertElementNotExists(String obj, String data)
+        {
+
+        }
+        
+        public static void AssertElementVisible(String obj, String data)
+        {
+
+        }
+        
+        public static void AssertElementNotVisible(String obj, String data)
+        {
+
+        }
+        
+        public static void AssertElementEditable(String obj, String data)
+        {
+
+        }
+        
+        public static void AssertElementNotEditable(String obj, String data)
+        {
+
+        }
+        
+        public static void AssertElementContainsText(String obj, String data)
         {
             Log.Info($"AssertTextPresent \"{data}\", Element \"{obj}\"");
             ExtentReporter.NodeInfo($"AssertTextPresent \"{data}\", Element \"{obj}\"");
@@ -80,8 +111,13 @@ namespace KeywordDriven.ActionKeywords
                 DriverScript.outcome = (int)Outcome.Error;
             }
         }
+        
+        public static void AssertElementHaveAttribute(String obj, String data)
+        {
 
-        public static void AssertTextNotPresent(String obj, String data)
+        }
+        
+        public static void AssertElementNotContainsText(String obj, String data)
         {
             Log.Info($"AssertTextNotPresent \"{data}\", Element \"{obj}\"");
             ExtentReporter.NodeInfo($"AssertTextNotPresent \"{data}\", Element \"{obj}\"");
@@ -112,89 +148,81 @@ namespace KeywordDriven.ActionKeywords
                 DriverScript.outcome = (int)Outcome.Error;
             }
         }
-
-        public static void AssertValue(String obj, String data)
-        {
-
-        }
-
-        public static void AssertNotValue(String obj, String data)
-        {
-
-        }
-
-        public static void AssetElementPresent(String obj, String data)
+        
+        public static void AssertElementHaveText(String obj, String data)
         {
 
         }
         
-        public static void AssetElementNotPresent(String obj, String data)
+        public static void AssertElementNotHaveText(String obj, String data)
         {
 
         }
-
-        public static void AssetChecked(String obj, String data)
-        {
-
-        }
-
-        public static void AssetNotChecked(String obj, String data)
-        {
-
-        }
-
-        public static void AssertSelectedOption(String obj, String data)
-        { }
         
-        public static void AssertNotSelectedOption(String obj, String data)
-        { 
+        public static void AssertSelectedText(String obj, String data)
+        {
 
         }
-
+        
         public static void AssertSelectedValue(String obj, String data)
-        { 
+        {
 
         }
-
-        public static void AssertNotSelectedValue(String obj, String data)
-        { 
-
-        }
-
+        
         public static void AssertSelectedIndex(String obj, String data)
         {
 
         }
-
-        public static void AssertNotSelectedIndex(String obj, String data)
-        { 
-
-        }
-
-        public static void AssetEditable(String obj, String data)
+        
+        public static void AssertCheckboxChecked(String obj, String data)
         {
 
         }
-
-        public static void AssetNotEditable(String obj, String data)
+        
+        public static void AssertCheckboxNotChecked(String obj, String data)
         {
 
         }
-
-        public static void AssertURLPresent(String obj, String data)
+        
+        public static void AssertRadioSeleced(String obj, String data)
         {
 
         }
-
-        public static void AssertURLContain(String obj, String data)
+        
+        public static void AssertRadioNotSeleced(String obj, String data)
         {
 
         }
-
-        public static void AssetFilePresent(String obj, String data)
+        
+        public static void AssertPageContainsTitle(String obj, String data)
         {
-            
+
         }
+        
+        public static void AssertPageNotContainsTitle(String obj, String data)
+        {
+
+        }
+        
+        public static void AssertPageHaveTitle(String obj, String data)
+        {
+
+        }
+        
+        public static void AssertPageNotHaveTitle(String obj, String data)
+        {
+
+        }
+        
+        public static void AssertPageContainsUrl(String obj, String data)
+        {
+
+        }
+        
+        public static void AssertPageHaveUrl(String obj, String data)
+        {
+
+        }        
         
         #endregion
     }

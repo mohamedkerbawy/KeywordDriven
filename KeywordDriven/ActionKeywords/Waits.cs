@@ -2,11 +2,12 @@
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Reflection;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Support.UI;
 using KeywordDriven.Config;
 using KeywordDriven.Utils;
-using KeywordDriven.Execution; /////SHOULD REMOVED/////
+using KeywordDriven.Execution;
 
 namespace KeywordDriven.ActionKeywords
 {
@@ -547,10 +548,11 @@ namespace KeywordDriven.ActionKeywords
     public partial class Keywords
     {
         #region Keywords methods
+
         public static void WaitUntilClickable(String obj, String data)
         {
-            Log.Info("WaitUntilClickable ..");
-            ExtentReporter.NodeInfo("WaitUntilClickable ..");
+            Log.Info($"{MethodBase.GetCurrentMethod().Name}");
+            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name}");
 
             try
             {
@@ -560,24 +562,19 @@ namespace KeywordDriven.ActionKeywords
                 {
                     DriverScript.outcome = (int) Outcome.Pass;
                 }
-                else
-                {
-                    Log.Error("WaitUntilClickable | No such element");
-                    ExtentReporter.NodeError("WaitUntilClickable | No such element");
-                    DriverScript.outcome = (int) Outcome.Error;
-                }
             }
             catch (Exception e)
             {
-                Log.Error("WaitUntilClickable | Exception: " + e.Message);
-                ExtentReporter.NodeError("WaitUntilClickable | Exception: " + e.Message);
+                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
                 DriverScript.outcome = (int) Outcome.Error;
             }
         }
+        
         public static void WaitUntilExists(String obj, String data)
         {
-            Log.Info("WaitUntilExists ..");
-            ExtentReporter.NodeInfo("WaitUntilExists ..");
+            Log.Info($"{MethodBase.GetCurrentMethod().Name}");
+            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name}");
 
             try
             {
@@ -585,26 +582,21 @@ namespace KeywordDriven.ActionKeywords
 
                 if (Waits.WaitUntilExists(by, Drivers.driver))
                 {
-                    DriverScript.outcome =(int) Outcome.Pass;
-                }
-                else
-                {
-                    Log.Error("WaitUntilExists | No such element");
-                    ExtentReporter.NodeError("WaitUntilExists | No such element");
-                    DriverScript.outcome = (int) Outcome.Error;
+                    DriverScript.outcome = (int)Outcome.Pass;
                 }
             }
             catch (Exception e)
             {
-                Log.Error("WaitUntilExists | Exception: " + e.Message);
-                ExtentReporter.NodeError("WaitUntilExists | Exception: " + e.Message);
+                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
                 DriverScript.outcome = (int) Outcome.Error;
             }
         }
+        
         public static void WaitUntilNotExists(String obj, String data)
         {
-            Log.Info("WaitUntilNotExists ..");
-            ExtentReporter.NodeInfo("WaitUntilNotExists ..");
+            Log.Info($"{MethodBase.GetCurrentMethod().Name}");
+            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name}");
 
             try
             {
@@ -614,55 +606,45 @@ namespace KeywordDriven.ActionKeywords
                 {
                     DriverScript.outcome = (int) Outcome.Pass;
                 }
-                else
-                {
-                    Log.Error("WaitUntilNotExists | No such element");
-                    ExtentReporter.NodeError("WaitUntilNotExists | No such element");
-                    DriverScript.outcome = (int) Outcome.Error;
-                }
             }
             catch (Exception e)
             {
-                Log.Error("WaitUntilNotExists | Exception: " + e.Message);
-                ExtentReporter.NodeError("WaitUntilNotExists | Exception: " + e.Message);
+                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
                 DriverScript.outcome = (int) Outcome.Error;
             }
         }
+        
         public static void WaitUntilVisible(String obj, String data)
         {
-            Log.Info("WaitUntilVisible ..");
-            ExtentReporter.NodeInfo("WaitUntilVisible ..");
+            Log.Info($"{MethodBase.GetCurrentMethod().Name}");
+            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name}");
             try
             {
                 By by = Locators.GetLocator(obj);
 
                 if (Waits.WaitUntilVisibleByDriver(by, Drivers.driver))
                 {
-                    DriverScript.outcome = (int) Outcome.Pass;
+                    DriverScript.outcome = (int)Outcome.Pass;
                 }
                 else if (Waits.WaitUntilVisibleByJs(by, Drivers.driver))
                 {
-                    DriverScript.outcome = (int) Outcome.Pass;
-                }
-                else
-                {
-                    Log.Error("WaitUntilVisible | No such element");
-                    ExtentReporter.NodeError("WaitUntilVisible | No such element");
-                    DriverScript.outcome = (int) Outcome.Error;
+                    DriverScript.outcome = (int)Outcome.Pass;
                 }
 
             }
             catch (Exception e)
             {
-                Log.Error("WaitUntilNotVisible | Exception: " + e.Message);
-                ExtentReporter.NodeError("WaitUntilNotVisible | Exception: " + e.Message);
+                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
                 DriverScript.outcome = (int) Outcome.Error;
             }
         }
+        
         public static void WaitUntilAllVisible(String obj, String data)
         {
-            Log.Info("WaitUntilAllVisible ..");
-            ExtentReporter.NodeInfo("WaitUntilAllVisible ..");
+            Log.Info($"{MethodBase.GetCurrentMethod().Name}");
+            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name}");
             try
             {
                 By by = Locators.GetLocator(obj);
@@ -671,25 +653,20 @@ namespace KeywordDriven.ActionKeywords
                 {
                     DriverScript.outcome = (int) Outcome.Pass;
                 }
-                else
-                {
-                    Log.Error("WaitUntilAllVisible | No such element");
-                    ExtentReporter.NodeError("WaitUntilAllVisible | No such element");
-                    DriverScript.outcome = (int) Outcome.Error;
-                }
 
             }
             catch (Exception e)
             {
-                Log.Error("WaitUntilAllVisible | Exception: " + e.Message);
-                ExtentReporter.NodeError("WaitUntilAllVisible | Exception: " + e.Message);
+                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: { e.Message}");
+                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: { e.Message}");
                 DriverScript.outcome = (int) Outcome.Error;
             }
         }
+        
         public static void WaitUntilNotVisible(String obj, String data)
         {
-            Log.Info("WaitUntilNotVisible ..");
-            ExtentReporter.NodeInfo("WaitUntilNotVisible ..");
+            Log.Info($"{MethodBase.GetCurrentMethod().Name}");
+            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name}");
             try
             {
                 By by = Locators.GetLocator(obj);
@@ -702,25 +679,20 @@ namespace KeywordDriven.ActionKeywords
                 {
                     DriverScript.outcome = (int) Outcome.Pass;
                 }
-                else
-                {
-                    Log.Error("WaitUntilNotVisible | No such element");
-                    ExtentReporter.NodeError("WaitUntilNotVisible | No such element");
-                    DriverScript.outcome = (int) Outcome.Error;
-                }
                 
             }
             catch (Exception e)
             {
-                Log.Error("WaitUntilNotVisible | Exception: " + e.Message);
-                ExtentReporter.NodeError("WaitUntilNotVisible | Exception: " + e.Message);
+                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
                 DriverScript.outcome = (int) Outcome.Error;
             }
         }
+        
         public static void WaitUntilAllNotVisible(String obj, String data)
         {
-            Log.Info("WaitUntilAllNotVisible ..");
-            ExtentReporter.NodeInfo("WaitUntilAllNotVisible ..");
+            Log.Info($"{MethodBase.GetCurrentMethod().Name}");
+            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name}");
             try
             {
                 By by = Locators.GetLocator(obj);
@@ -729,25 +701,20 @@ namespace KeywordDriven.ActionKeywords
                 {
                     DriverScript.outcome = (int) Outcome.Pass;
                 }
-                else
-                {
-                    Log.Error("WaitUntilAllNotVisible | No such element");
-                    ExtentReporter.NodeError("WaitUntilAllNotVisible | No such element");
-                    DriverScript.outcome = (int) Outcome.Error;
-                }
 
             }
             catch (Exception e)
             {
-                Log.Error("WaitUntilAllNotVisible | Exception: " + e.Message);
-                ExtentReporter.NodeError("WaitUntilAllNotVisible | Exception: " + e.Message);
+                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
                 DriverScript.outcome = (int) Outcome.Error;
             }
         }
+        
         public static void WaitUntilExistsAndVisible(String obj, String data)
         {
-            Log.Info("WaitUntilExistsAndVisible ..");
-            ExtentReporter.NodeInfo("WaitUntilExistsAndVisible ..");
+            Log.Info($"{MethodBase.GetCurrentMethod().Name}");
+            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name}");
 
             try
             {
@@ -755,26 +722,21 @@ namespace KeywordDriven.ActionKeywords
 
                 if (Waits.WaitUntilExistsAndVisible(by, Drivers.driver))
                 {
-                    DriverScript.outcome = (int) Outcome.Pass;
-                }
-                else
-                {
-                    Log.Error("WaitUntilExistsAndVisible | No such element");
-                    ExtentReporter.NodeError("WaitUntilExistsAndVisible | No such element");
-                    DriverScript.outcome = (int) Outcome.Error;
+                    DriverScript.outcome = (int)Outcome.Pass;
                 }
             }
             catch (Exception e)
             {
-                Log.Error("WaitUntilExistsAndVisible | Exception: " + e.Message);
-                ExtentReporter.NodeError("WaitUntilExistsAndVisible | Exception: " + e.Message);
+                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
                 DriverScript.outcome = (int) Outcome.Error;
             }
         }
+        
         public static void WaitUntilEditable(String obj, String data)
         {
-            Log.Info("WaitUntilEditable ..");
-            ExtentReporter.NodeInfo("WaitUntilEditable ..");
+            Log.Info($"{MethodBase.GetCurrentMethod().Name}");
+            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name}");
             try
             {
                 By by = Locators.GetLocator(obj);
@@ -783,24 +745,19 @@ namespace KeywordDriven.ActionKeywords
                 {
                     DriverScript.outcome = (int) Outcome.Pass;
                 }
-                else
-                {
-                    Log.Error("WaitUntilEditable | No such element");
-                    ExtentReporter.NodeError("WaitUntilEditable | No such element");
-                    DriverScript.outcome = (int) Outcome.Error;
-                }
             }
             catch (Exception e)
             {
-                Log.Error("WaitUntilEditable | Exception: " + e.Message);
-                ExtentReporter.NodeError("WaitUntilEditable | Exception: " + e.Message);
+                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
                 DriverScript.outcome = (int) Outcome.Error;
             }
         }
+        
         public static void WaitUntilNotEditable(String obj, String data)
         {
-            Log.Info("WaitUntilNotEditable ..");
-            ExtentReporter.NodeInfo("WaitUntilNotEditable ..");
+            Log.Info($"{MethodBase.GetCurrentMethod().Name}");
+            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name}");
             try
             {
                 By by = Locators.GetLocator(obj);
@@ -809,24 +766,19 @@ namespace KeywordDriven.ActionKeywords
                 {
                     DriverScript.outcome = (int) Outcome.Pass;
                 }
-                else
-                {
-                    Log.Error("WaitUntilNotEditable | No such element");
-                    ExtentReporter.NodeError("WaitUntilNotEditable | No such element");
-                    DriverScript.outcome = (int) Outcome.Error;
-                }
             }
             catch (Exception e)
             {
-                Log.Error("WaitUntilNotEditable | Exception: " + e.Message);
-                ExtentReporter.NodeError("WaitUntilNotEditable | Exception: " + e.Message);
+                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
                 DriverScript.outcome = (int) Outcome.Error;
             }
         }
+        
         public static void WaitUntilUrlContains(String obj, String data)
         {
-            Log.Info("WaitUntilUrlContains .." + data);
-            ExtentReporter.NodeInfo("WaitUntilUrlContains ..");
+            Log.Info($"{MethodBase.GetCurrentMethod().Name}");
+            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name}");
             try
             {
 
@@ -834,48 +786,38 @@ namespace KeywordDriven.ActionKeywords
                 {
                     DriverScript.outcome = (int) Outcome.Pass;
                 }
-                else
-                {
-                    Log.Error("WaitUntilUrlContains | No such element");
-                    ExtentReporter.NodeError("WaitUntilUrlContains | No such element");
-                    DriverScript.outcome = (int) Outcome.Error;
-                }
             }
             catch (Exception e)
             {
-                Log.Error("WaitUntilUrlContains | Exception: " + e.Message);
-                ExtentReporter.NodeError("WaitUntilUrlContains | Exception: " + e.Message);
+                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
                 DriverScript.outcome = (int) Outcome.Error;
             }
         }
+        
         public static void WaitUntilUrlContainsIgnoreCase(String obj, String data)
         {
-            Log.Info("WaitUntilUrlContainsIgnoreCase .." + data);
-            ExtentReporter.NodeInfo("WaitUntilUrlContainsIgnoreCase ..");
+            Log.Info($"{MethodBase.GetCurrentMethod().Name}");
+            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name}");
             try
             {
                 if (Waits.WaitUntilUrlContainsIgnoreCase(Drivers.driver, data))
                 {
                     DriverScript.outcome = (int) Outcome.Pass;
                 }
-                else
-                {
-                    Log.Error("WaitUntilUrlContainsIgnoreCase | No such element");
-                    ExtentReporter.NodeError("WaitUntilUrlContainsIgnoreCase | No such element");
-                    DriverScript.outcome = (int) Outcome.Error;
-                }
             }
             catch (Exception e)
             {
-                Log.Error("WaitUntilUrlContainsIgnoreCase | Exception: " + e.Message);
-                ExtentReporter.NodeError("WaitUntilUrlContainsIgnoreCase | Exception: " + e.Message);
+                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
                 DriverScript.outcome = (int) Outcome.Error;
             }
         }
+        
         public static void WaitUntilUrlEquals(String obj, String data)
         {
-            Log.Info("WaitUntilUrlEquals .." + data);
-            ExtentReporter.NodeInfo("WaitUntilUrlEquals ..");
+            Log.Info($"{MethodBase.GetCurrentMethod().Name}");
+            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name}");
             try
             {
 
@@ -883,24 +825,19 @@ namespace KeywordDriven.ActionKeywords
                 {
                     DriverScript.outcome = (int) Outcome.Pass;
                 }
-                else
-                {
-                    Log.Error("WaitUntilUrlEquals | No such element");
-                    ExtentReporter.NodeError("WaitUntilUrlEquals | No such element");
-                    DriverScript.outcome = (int) Outcome.Error;
-                }
             }
             catch (Exception e)
             {
-                Log.Error("WaitUntilUrlEquals | Exception: " + e.Message);
-                ExtentReporter.NodeError("WaitUntilUrlEquals | Exception: " + e.Message);
+                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
                 DriverScript.outcome = (int) Outcome.Error;
             }
         }
+        
         public static void WaitUntilUrlStartsWith(String obj, String data)
         {
-            Log.Info("WaitUntilUrlStartsWith .." + data);
-            ExtentReporter.NodeInfo("WaitUntilUrlStartsWith ..");
+            Log.Info($"{MethodBase.GetCurrentMethod().Name}");
+            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name}");
             try
             {
 
@@ -908,24 +845,19 @@ namespace KeywordDriven.ActionKeywords
                 {
                     DriverScript.outcome = (int) Outcome.Pass;
                 }
-                else
-                {
-                    Log.Error("WaitUntilUrlStartsWith | No such element");
-                    ExtentReporter.NodeError("WaitUntilUrlStartsWith | No such element");
-                    DriverScript.outcome = (int) Outcome.Error;
-                }
             }
             catch (Exception e)
             {
-                Log.Error("WaitUntilUrlStartsWith | Exception: " + e.Message);
-                ExtentReporter.NodeError("WaitUntilUrlStartsWith | Exception: " + e.Message);
+                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
                 DriverScript.outcome = (int) Outcome.Error;
             }
         }
+        
         public static void WaitUntilUrlEndsWith(String obj, String data)
         {
-            Log.Info("WaitUntilUrlEndsWith .." + data);
-            ExtentReporter.NodeInfo("WaitUntilUrlEndsWith ..");
+            Log.Info($"{MethodBase.GetCurrentMethod().Name}");
+            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name}");
             try
             {
 
@@ -933,24 +865,19 @@ namespace KeywordDriven.ActionKeywords
                 {
                     DriverScript.outcome = (int) Outcome.Pass;
                 }
-                else
-                {
-                    Log.Error("WaitUntilUrlEndsWith | No such element");
-                    ExtentReporter.NodeError("WaitUntilUrlEndsWith");
-                    DriverScript.outcome = (int) Outcome.Error;
-                }
             }
             catch (Exception e)
             {
-                Log.Error("Not able to WaitUntilUrlEndsWith | Exception: " + e.Message);
-                ExtentReporter.NodeError("Not able to WaitUntilUrlEndsWith | Exception: " + e.Message);
+                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
                 DriverScript.outcome = (int) Outcome.Error;
             }
         }
+        
         public static void WaitUntilUrlMatchesPattern(String obj, String data)
         {
-            Log.Info("WaitUntilUrlMatchesPattern .." + data);
-            ExtentReporter.NodeInfo("WaitUntilUrlMatchesPattern ..");
+            Log.Info($"{MethodBase.GetCurrentMethod().Name}");
+            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name}");
             try
             {
 
@@ -958,24 +885,19 @@ namespace KeywordDriven.ActionKeywords
                 {
                     DriverScript.outcome = (int) Outcome.Pass;
                 }
-                else
-                {
-                    Log.Error("WaitUntilUrlMatchesPattern | No such element");
-                    ExtentReporter.NodeError("WaitUntilUrlMatchesPattern | No such element");
-                    DriverScript.outcome = (int) Outcome.Error;
-                }
             }
             catch (Exception e)
             {
-                Log.Error("Not able to WaitUntilUrlMatchesPattern | Exception: " + e.Message);
-                ExtentReporter.NodeError("Not able to WaitUntilUrlMatchesPattern | Exception: " + e.Message);
+                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name}| Exception: {e.Message}");
                 DriverScript.outcome = (int) Outcome.Error;
             }
         }
+        
         public static void WaitSeconds(String obj, String data)
         {
-            Log.Info($"Waiting \"{data}\" seconds");
-            ExtentReporter.NodeInfo($"Waiting \"{data}\" seconds");
+            Log.Info($"{MethodBase.GetCurrentMethod().Name} \"{data}\"");
+            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} \"{data}\"");
 
             try
             {
@@ -985,11 +907,12 @@ namespace KeywordDriven.ActionKeywords
             }
             catch (Exception e)
             {
-                Log.Error($"WaitSeconds | Exception: {e.Message}");
-                ExtentReporter.NodeInfo($"WaitSeconds | Exception: {e.Message}");
+                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
                 DriverScript.outcome = (int) Outcome.Error;
             }
         }
+        
         #endregion
     }
 }

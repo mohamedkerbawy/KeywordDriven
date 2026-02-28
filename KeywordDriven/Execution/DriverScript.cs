@@ -5,6 +5,7 @@ using KeywordDriven.ActionKeywords;
 
 namespace KeywordDriven.Execution
 {
+    //Results Outcome Enum
     public enum Outcome
     {
         Pass,
@@ -12,7 +13,8 @@ namespace KeywordDriven.Execution
         Error
     }
 
-    enum RunMode
+    //Run Mode options Enum
+    public enum RunMode
     {
         Yes,
         No
@@ -26,25 +28,32 @@ namespace KeywordDriven.Execution
         //reflection class object
         internal static MethodInfo[] method;
 
+        //Locators variables
         internal static string actionKeyword;
         internal static string pageObject;
 
-        internal static int testStep;
-        internal static int testLastStep;
+        //Test Cases variables
         internal static string testCaseID;
         internal static string testCaseTitle;
         internal static string testCaseDesc;
-        internal static string testStepDesc;
         internal static string runMode;
+
+        //Test Steps variables
+        internal static int testStep;
+        internal static int testLastStep;
+        internal static string testStepDesc;
         internal static string data;
 
+        //result variable
         internal static int outcome;
 
+        // static constructor to initialize the action keywords class object
         static DriverScript()
         {
             actionKeywords = new Keywords();
         }
 
+        // This method will execute all the test cases and test steps based on the run mode value in the TestCases sheet
         public static void Execute_TestCases()
         {
             // get the total number of testcases from the TestCases sheet
@@ -140,6 +149,7 @@ namespace KeywordDriven.Execution
             }
         }
 
+        // This method will execute the action keyword for the current test step and set the result in the TestSteps sheet based on the outcome of the action keyword execution
         static void Execute_Actions()
         {
 

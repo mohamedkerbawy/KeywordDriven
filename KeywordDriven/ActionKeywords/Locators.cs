@@ -1,200 +1,239 @@
-﻿using System;
-using OpenQA.Selenium;
-using OpenQA.Selenium.Support.UI;
-using KeywordDriven.Config;
+﻿using KeywordDriven.Config;
+using KeywordDriven.Execution;
 using KeywordDriven.Utils;
-using KeywordDriven.Execution;   /////SHOULD REMOVED/////
+using OpenQA.Selenium;
+using OpenQA.Selenium.BiDi.Modules.BrowsingContext;
+using OpenQA.Selenium.Interactions;
+using OpenQA.Selenium.Support.UI;
+using SeleniumExtras.WaitHelpers;
+using System;
+using System.Reflection;
+using System.Xml.Linq;
 
 namespace KeywordDriven.ActionKeywords
 {
     internal partial class Locators
     {
+        // <summary>
+        /// Maps locator type with locator value and return locator By object.
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
         internal static By GetLocator(string obj)
         {
-            string[] locator = obj.Split('_');
+            string[] pageObject = obj.Split('_');
 
-            string locatortype = locator[1];
-            string locatorvalue = GetLocatorValue(obj);
-
-            By by;
-            switch (locatortype)
+            string locatortype = pageObject[1];
+            string locatorvalue = ExcelManager.GetKeyValue(obj, ExcelSetting.Col_Locators_PageObject, ExcelSetting.Sheet_Locators);
+            
+            By locator = locatortype.Trim().ToLower() switch
             {
-                case "xpath":
-                    by = By.XPath(locatorvalue);
-                    break;
-                case "id":
-                    by = By.Id(locatorvalue);
-                    break;
-                case "csslocator":
-                    by = By.CssSelector(locatorvalue);
-                    break;
-                case "classname":
-                    by = By.ClassName(locatorvalue);
-                    break;
-                case "linktext":
-                    by = By.LinkText(locatorvalue);
-                    break;
-                case "name":
-                    by = By.Name(locatorvalue);
-                    break;
-                case "partiallinktext":
-                    by = By.PartialLinkText(locatorvalue);
-                    break;
-                default:
-                    by = null;
-                    break;
-            }
-            return by;
-        }
-        
-        internal static string GetLocatorValue(String obj)
-        {
-            return ExcelManager.GetKeyValue(obj, ExcelSetting.Col_Locators_PageObject, ExcelSetting.Sheet_Locators);
+                "xpath" => By.XPath(locatorvalue),
+                "id" => By.Id(locatorvalue),
+                "csslocator" => By.CssSelector(locatorvalue),
+                "classname" => By.ClassName(locatorvalue),
+                "tagname" => By.TagName(locatorvalue),
+                "linktext" => By.LinkText(locatorvalue),
+                "name" => By.Name(locatorvalue),
+                "partiallinktext" => By.PartialLinkText(locatorvalue),
+                _ => throw new Exception($"Unsupported locator type:{locatortype.Trim().ToLower()}, Valid types: id, name, xpath, css, classname, tagname, linktext, partiallinktext"),
+            };
+            return locator;
         }
 
-        internal static bool ClickByDriver(By by)
+        /// <summary>
+        /// Standard click Element.
+        /// </summary>
+        /// <param name="by"></param>
+        /// <returns></returns>
+        internal static bool ClickByDriver(By locator)
         {
             try
             {
-                Log.Info("ClickByDriver ..");
-                ExtentReporter.NodeInfo("ClickByDriver ..");
-
-                Drivers.driver.FindElement(by).Click();
+                Drivers.driver.FindElement(locator).Click();
                 return true;
             }
             catch (Exception e)
             {
-                Log.Info($"Not able to ClickByDriver | Exception: {e.Message}");
-                ExtentReporter.NodeInfo($"Not able to ClickByDriver | Exception: {e.Message}");
+                Log.Info($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name}| Exception: {e.Message}");
                 return false;
             }
         }
 
-        internal static bool ClickByJavascript(By by)
+        /// <summary>
+        /// Clicks element using JavaScript.
+        /// </summary>
+        /// <param name="by"></param>
+        /// <returns></returns>
+        internal static bool ClickByJavascript(By locator)
         {
             try
             {
-                Log.Info("ClickByJavascript ..");
-                ExtentReporter.NodeInfo("ClickByJavascript ..");
+                var js = (IJavaScriptExecutor)Drivers.driver;
+                js.ExecuteScript("arguments[0].click();", Drivers.driver.FindElement(locator));
+                return true;
+            }
+            catch (Exception e)
+            {
+                Log.Info($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                return false;
+            }
+        }
 
+        /// <summary>
+        /// Clicks element using Actions (move to element then click).
+        /// Use for custom dropdowns, menus, tooltips, or canvas elements.
+        /// </summary>
+        /// <param name="by"></param>
+        internal static void ClickByActions(By locator)
+        {
+            try
+            {
+                new Actions(Drivers.driver)
+                    .MoveToElement(Drivers.driver.FindElement(locator))
+                    .Click()
+                    .Perform();
+            }
+            catch (Exception e)
+            {
+                Log.Info($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+            }
+        }
+
+        internal static void ClickByOffset(By locator)
+        {
+
+        }
+        /// <summary>
+        /// Double clicks element using Actions.
+        /// Use for elements that require double click to trigger.
+        /// </summary>
+        internal static void DoubleClick(By locator)
+        {
+            try
+            {
+                new Actions(Drivers.driver)
+                    .DoubleClick(Drivers.driver.FindElement(locator))
+                    .Perform();
+
+            }
+            catch (Exception e)
+            {
+                Log.Info($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Right clicks element using Actions.
+        /// Use to open context menus.
+        /// </summary>
+        internal static void RightClick(By locator)
+        {
+            try
+            {
+                new Actions(Drivers.driver)
+                    .ContextClick(Drivers.driver.FindElement(locator))
+                    .Perform();
+            }
+            catch (Exception e)
+            {
+                Log.Info($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+            }
+        }
+
+        internal static bool InputByDriver(By locator, String data)
+        {
+            try
+            {
+                Drivers.driver.FindElement(locator).SendKeys(data);
+                return true;
+            }
+            catch (Exception e)
+            {
+                Log.Info($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                return false;
+            }
+        }
+
+        internal static bool InputByJavascript(By locator, String data)
+        {
+            try
+            {
                 IJavaScriptExecutor jse = (IJavaScriptExecutor)Drivers.driver;
-                jse.ExecuteScript("arguments[arguments.length - 1].click();", Drivers.driver.FindElement(by));
+                jse.ExecuteScript("arguments[0].value='" + data + "';", Drivers.driver.FindElement(locator));
                 return true;
             }
             catch (Exception e)
             {
-                Log.Info($"Not able to ClickByJavascript | Exception: {e.Message}");
-                ExtentReporter.NodeInfo($"Not able to ClickByJavascript | Exception: {e.Message}");
+                Log.Info($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
                 return false;
             }
         }
 
-        internal static bool InputByDriver(By by, String data)
+        internal static bool SelectTextByDriver(By locator, string data)
         {
             try
             {
-                Log.Info("InputByDriver ..");
-                ExtentReporter.NodeInfo("InputByDriver ..");
-
-                Drivers.driver.FindElement(by).SendKeys(data);
+                new SelectElement(Drivers.driver.FindElement(locator)).SelectByText(data);
                 return true;
             }
             catch (Exception e)
             {
-                Log.Info($"Not able to InputByDriver | Exception: {e.Message}");
-                ExtentReporter.NodeInfo($"Not able to InputByDriver | Exception: {e.Message}");
+                Log.Info($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
                 return false;
             }
         }
 
-        internal static bool InputByJavascript(By by, String data)
+        internal static bool SelectValueByDriver(By locator, string data)
         {
             try
             {
-                Log.Info("InputByJavascript ..");
-                ExtentReporter.NodeInfo("InputByJavascript ..");
+                new SelectElement(Drivers.driver.FindElement(locator)).SelectByValue(data);
+                return true;
+            }
+            catch (Exception e)
+            {
+                Log.Info($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                return false;
+            }
+        }
 
+        internal static bool ClearByDriver(By locator)
+        {
+            try
+            {
+                Drivers.driver.FindElement(locator).Clear();
+                return true;
+            }
+            catch (Exception e)
+            {
+                Log.Info($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                return false;
+            }
+        }
+
+        internal static bool ClearByJavascript(By locator)
+        {
+            try
+            {
                 IJavaScriptExecutor jse = (IJavaScriptExecutor)Drivers.driver;
-                jse.ExecuteScript("arguments[0].value='" + data + "';", Drivers.driver.FindElement(by));
+                jse.ExecuteScript("arguments[0].value = '';", Drivers.driver.FindElement(locator));
                 return true;
             }
             catch (Exception e)
             {
-                Log.Info($"Not able to InputByJavascript | Exception: {e.Message}");
-                ExtentReporter.NodeInfo($"Not able to InputByJavascript | Exception: {e.Message}");
-                return false;
-            }
-        }
-
-        internal static bool SelectTextByDriver(By by, string data)
-        {
-            try
-            {
-                Log.Info("SelectTextByDriver ..");
-                ExtentReporter.NodeInfo("SelectTextByDriver ..");
-
-                new SelectElement(Drivers.driver.FindElement(by)).SelectByText(data);
-                return true;
-            }
-            catch (Exception e)
-            {
-                Log.Info($"Not able to SelectTextByDriver | Exception: {e.Message}");
-                ExtentReporter.NodeInfo($"Not able to SelectTextByDriver | Exception: {e.Message}");
-                return false;
-            }
-        }
-
-        internal static bool SelectValueByDriver(By by, string data)
-        {
-            try
-            {
-                Log.Info("SelectValueByDriver ..");
-                ExtentReporter.NodeInfo("SelectValueByDriver ..");
-
-                new SelectElement(Drivers.driver.FindElement(by)).SelectByValue(data);
-                return true;
-            }
-            catch (Exception e)
-            {
-                Log.Info($"Not able to SelectValueByDriver | Exception: {e.Message}");
-                ExtentReporter.NodeInfo($"Not able to SelectValueByDriver | Exception: {e.Message}");
-                return false;
-            }
-        }
-
-        internal static bool ClearByDriver(By by)
-        {
-            try
-            {
-                Log.Info("ClearByDriver ..");
-                ExtentReporter.NodeInfo("ClearByDriver ..");
-
-                Drivers.driver.FindElement(by).Clear();
-                return true;
-            }
-            catch (Exception e)
-            {
-                Log.Info($"Not able to ClearByDriver | Exception: {e.Message}");
-                ExtentReporter.NodeInfo($"Not able to ClearByDriver | Exception: {e.Message}");
-                return false;
-            }
-        }
-
-        internal static bool ClearByJavascript(By by)
-        {
-            try
-            {
-                Log.Info("ClearByJavascript ..");
-                ExtentReporter.NodeInfo("ClearByJavascript ..");
-
-                IJavaScriptExecutor jse = (IJavaScriptExecutor)Drivers.driver;
-                jse.ExecuteScript("arguments[0].value = '';", Drivers.driver.FindElement(by));
-                return true;
-            }
-            catch (Exception e)
-            {
-                Log.Info($"Not able to ClearByJavascript | Exception: {e.Message}");
-                ExtentReporter.NodeInfo($"Not able to ClearByJavascript | Exception: {e.Message}");
+                Log.Info($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
                 return false;
             }
         }
@@ -205,63 +244,57 @@ namespace KeywordDriven.ActionKeywords
     {
 
         #region Keywords methods
+
         public static void Click(String obj, String data)
         {
-            Log.Info($"Clicking on Element \"{obj}\"");
-            ExtentReporter.NodeInfo($"Clicking on Element \"{obj}\"");
+            Log.Info($"{MethodBase.GetCurrentMethod().Name} \"{obj}\"");
+            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} \"{obj}\"");
 
             try
             {
-                By by = Locators.GetLocator(obj);
+                By locator = Locators.GetLocator(obj);
 
-                Waits.WaitUntilClickable(by, Drivers.driver);
-                WaitSeconds("", "2");
+                Waits.WaitUntilClickable(locator, Drivers.driver);
 
-                if (!Locators.ClickByDriver(by))
+                ((IJavaScriptExecutor)Drivers.driver).ExecuteScript("arguments[0].scrollIntoView({block: 'center'});", locator);
+
+                if (Locators.ClickByDriver(locator))
                 {
-                    if (!Locators.ClickByJavascript(by))
-                    {
-                        Log.Error("Not able to ClickByDriver or ClickByJavascript");
-                        ExtentReporter.NodeError("Not able to ClickByDriver or ClickByJavascript");
-                        DriverScript.outcome = (int) Outcome.Error;
-                    }
-                    else
-                    {
-                        DriverScript.outcome = (int) Outcome.Pass;
-                    }
+                    DriverScript.outcome = (int)Outcome.Pass;
+                }
+                else if (Locators.ClickByJavascript(locator))
+                {
+                    DriverScript.outcome = (int) Outcome.Pass;
                 }
                 else
                 {
-                    DriverScript.outcome = (int) Outcome.Pass;
+                    DriverScript.outcome = (int)Outcome.Error;
                 }
                 
             }
             catch (Exception e)
             {
-                Log.Error($"Not able to Click | Exception: {e.Message}");
-                ExtentReporter.NodeError($"Not able to Click | Exception: {e.Message}");
+                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
                 ExtentReporter.AddScreenShot("");
                 DriverScript.outcome = (int) Outcome.Error;
             }
         }
 
-        public static void Input(String obj, String data)
+        public static void TypeText(String obj, String data)
         {
-            Log.Info($"Typing \"{data}\" in Element \"{obj}\"");
-            ExtentReporter.NodeInfo($"Typing \"{data}\" in Element \"{obj}\"");
+            Log.Info($"{MethodBase.GetCurrentMethod().Name} \"{data}\" to \"{obj}\"");
+            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} \"{data}\" to \"{obj}\"");
             try
             {
-                By by = Locators.GetLocator(obj);
+                By locator = Locators.GetLocator(obj);
 
-                Waits.WaitUntilClickable(by, Drivers.driver);
-                WaitSeconds("", "2");
+                Waits.WaitUntilClickable(locator, Drivers.driver);
 
-                if (!Locators.InputByDriver(by, data))
+                if (!Locators.InputByDriver(locator, data))
                 {
-                    if (!Locators.InputByJavascript(by, data))
+                    if (!Locators.InputByJavascript(locator, data))
                     {
-                        Log.Error("Not able to InputByDriver or InputByJavascript");
-                        ExtentReporter.NodeError("Not able to InputByDriver or InputByJavascript");
                         DriverScript.outcome = (int) Outcome.Error;
                     }
                     else
@@ -277,102 +310,68 @@ namespace KeywordDriven.ActionKeywords
             }
             catch (Exception e)
             {
-                Log.Error($"Not able to Input | Exception: {e.Message}");
-                ExtentReporter.NodeError($"Not able to Input | Exception: {e.Message}");
+                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
                 DriverScript.outcome = (int) Outcome.Error;
             }
         }
 
-        public static void Select(String obj, String data)
+        public static void AppendText(String obj, String data)
+        { }
+        
+        public static void ClearText(String obj, String data)
         {
-            Log.Info($"Selecting from dropdown Element \"{obj}\"");
-            ExtentReporter.NodeInfo($"Selecting from dropdown Element \"{obj}\"");
+            Log.Info($"{MethodBase.GetCurrentMethod().Name} \"{obj}\"");
+            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} \"{obj}\"");
 
             try
             {
-                By by = Locators.GetLocator(obj);
+                By locator = Locators.GetLocator(obj);
 
-                Waits.WaitUntilExists(by, Drivers.driver);
-                if (!Locators.SelectTextByDriver(by, data))
+                Waits.WaitUntilClickable(locator, Drivers.driver);
+                WaitSeconds("", "2");
+
+                if (!Locators.ClearByDriver(locator))
                 {
-                    if (!Locators.SelectValueByDriver(by, data))
+                    if (!Locators.ClearByJavascript(locator))
                     {
-                        Log.Error("Not able to SelectTextByDriver or SelectValueByDriver");
-                        ExtentReporter.NodeError("Not able to SelectTextByDriver or SelectValueByDriver");
-                        DriverScript.outcome = (int) Outcome.Error;
+                        DriverScript.outcome = (int)Outcome.Error;
                     }
                     else
                     {
-                        DriverScript.outcome = (int) Outcome.Pass;
+                        DriverScript.outcome = (int)Outcome.Pass;
                     }
                 }
                 else
                 {
-                    DriverScript.outcome = (int) Outcome.Pass;
+                    DriverScript.outcome = (int)Outcome.Pass;
                 }
-            }
-            catch (Exception e)
-            {
-                Log.Error($"Not able to Select | Exception: {e.Message}");
-                ExtentReporter.NodeError($"Not able to Select | Exception: {e.Message}");
-                DriverScript.outcome = (int) Outcome.Error;
-            }
-        }
 
-        public static void KeyPress(String obj, String data)
-        {
-            Log.Info($"KeyPress \"{data}\" on \"{obj}\"");
-            ExtentReporter.NodeInfo($"KeyPress \"{data}\" on \"{obj}\"");
-            try
-            {
-                By by = Locators.GetLocator(obj);
-                switch (data.ToLower().Trim())
-                {
-                    case "enter":
-                        Drivers.driver.FindElement(by).SendKeys(Keys.Enter);
-                        DriverScript.outcome = (int) Outcome.Pass;
-                        break;
-                    case "return":
-                        Drivers.driver.FindElement(by).SendKeys(Keys.Return);
-                        DriverScript.outcome = (int) Outcome.Pass;
-                        break;
-                    case "tab":
-                        Drivers.driver.FindElement(by).SendKeys(Keys.Tab);
-                        DriverScript.outcome = (int) Outcome.Pass;
-                        break;
-                    default:
-                        Log.Error("Not a key");
-                        ExtentReporter.NodeError("Not a key");
-                        DriverScript.outcome = (int) Outcome.Error;
-                        break;
-                }
             }
             catch (Exception e)
             {
-                Log.Error("Not able to KeyPress " + data + " | Exception: " + e.Message);
-                ExtentReporter.NodeError("Not able to KeyPress " + data + " | Exception: " + e.Message);
-                DriverScript.outcome = (int) Outcome.Error;
+                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                ExtentReporter.AddScreenShot("");
+                DriverScript.outcome = (int)Outcome.Error;
             }
         }
         
-        public static void Clear(String obj, String data)
+        public static void SelectByText(String obj, String data)
         {
-            Log.Info($"Clearing an Element \"{obj}\"");
-            ExtentReporter.NodeInfo($"Clearing an Element \"{obj}\"");
+            Log.Info($"{MethodBase.GetCurrentMethod().Name} from \"{obj}\"");
+            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} from \"{obj}\"");
 
             try
             {
-                By by = Locators.GetLocator(obj);
+                By locator = Locators.GetLocator(obj);
 
-                Waits.WaitUntilClickable(by, Drivers.driver);
-                WaitSeconds("", "2");
+                Waits.WaitUntilExists(locator, Drivers.driver);
 
-                if (!Locators.ClearByDriver(by))
+                if (!Locators.SelectTextByDriver(locator, data))
                 {
-                    if (!Locators.ClearByJavascript(by))
+                    if (!Locators.SelectValueByDriver(locator, data))
                     {
-                        Log.Error("Not able to ClearByDriver or ClearByJavascript");
-                        ExtentReporter.NodeError("Not able to ClearByDriver or ClearByJavascript");
                         DriverScript.outcome = (int) Outcome.Error;
                     }
                     else
@@ -384,16 +383,64 @@ namespace KeywordDriven.ActionKeywords
                 {
                     DriverScript.outcome = (int) Outcome.Pass;
                 }
-                
             }
             catch (Exception e)
             {
-                Log.Error($"Not able to Clear| Exception: {e.Message}");
-                ExtentReporter.NodeError($"Not able to Clear | Exception: {e.Message}");
-                ExtentReporter.AddScreenShot("");
+                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
                 DriverScript.outcome = (int) Outcome.Error;
             }
-        }      
+        }
+
+        public static void SelectByValue(String obj, String data)
+        { }
+
+        public static void SelectByIndex(String obj, String data)
+        { }
+
+        public static void CheckCheckbox(String obj, String data)
+        { }
+
+        public static void SelectRadioButton(String obj, String data)
+        { }
+
+        public static void PressKey(String obj, String data)
+        {
+            Log.Info($"{MethodBase.GetCurrentMethod().Name} \"{data}\" in \"{obj}\"");
+            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} \"{data}\" in \"{obj}\"");
+            try
+            {
+                By locator = Locators.GetLocator(obj);
+                switch (data.ToLower().Trim())
+                {
+                    case "enter":
+                        Drivers.driver.FindElement(locator).SendKeys(Keys.Enter);
+                        DriverScript.outcome = (int) Outcome.Pass;
+                        break;
+                    case "return":
+                        Drivers.driver.FindElement(locator).SendKeys(Keys.Return);
+                        DriverScript.outcome = (int) Outcome.Pass;
+                        break;
+                    case "tab":
+                        Drivers.driver.FindElement(locator).SendKeys(Keys.Tab);
+                        DriverScript.outcome = (int) Outcome.Pass;
+                        break;
+                    default:
+                        Drivers.driver.FindElement(locator).SendKeys(Keys.Enter);
+                        DriverScript.outcome = (int)Outcome.Pass;
+                        break;
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                DriverScript.outcome = (int) Outcome.Error;
+            }
+        }
+
+        public static void UploadFiles(String obj, String data)
+        { }
 
         #endregion
     }
