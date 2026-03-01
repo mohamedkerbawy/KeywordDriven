@@ -7,6 +7,9 @@ using OpenQA.Selenium.Interactions;
 using OpenQA.Selenium.Support.UI;
 using SeleniumExtras.WaitHelpers;
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
 
@@ -46,11 +49,11 @@ namespace KeywordDriven.ActionKeywords
         /// </summary>
         /// <param name="by"></param>
         /// <returns></returns>
-        internal static bool ClickByDriver(By locator)
+        internal static bool ClickByDriver(IWebDriver driver, By locator)
         {
             try
             {
-                Drivers.driver.FindElement(locator).Click();
+                driver.FindElement(locator).Click();
                 return true;
             }
             catch (Exception e)
@@ -66,11 +69,11 @@ namespace KeywordDriven.ActionKeywords
         /// </summary>
         /// <param name="by"></param>
         /// <returns></returns>
-        internal static bool ClickByJavascript(By locator)
+        internal static bool ClickByJavascript(IWebDriver driver, By locator)
         {
             try
             {
-                var js = (IJavaScriptExecutor)Drivers.driver;
+                var js = (IJavaScriptExecutor)driver;
                 js.ExecuteScript("arguments[0].click();", Drivers.driver.FindElement(locator));
                 return true;
             }
@@ -87,12 +90,12 @@ namespace KeywordDriven.ActionKeywords
         /// Use for custom dropdowns, menus, tooltips, or canvas elements.
         /// </summary>
         /// <param name="by"></param>
-        internal static void ClickByActions(By locator)
+        internal static void ClickByActions(IWebDriver driver, By locator)
         {
             try
             {
-                new Actions(Drivers.driver)
-                    .MoveToElement(Drivers.driver.FindElement(locator))
+                new Actions(driver)
+                    .MoveToElement(driver.FindElement(locator))
                     .Click()
                     .Perform();
             }
@@ -103,20 +106,22 @@ namespace KeywordDriven.ActionKeywords
             }
         }
 
-        internal static void ClickByOffset(By locator)
+        internal static void ClickByOffset(IWebDriver driver, By locator)
         {
 
         }
+
         /// <summary>
         /// Double clicks element using Actions.
         /// Use for elements that require double click to trigger.
         /// </summary>
-        internal static void DoubleClick(By locator)
+        
+        internal static void DoubleClick(IWebDriver driver, By locator)
         {
             try
             {
-                new Actions(Drivers.driver)
-                    .DoubleClick(Drivers.driver.FindElement(locator))
+                new Actions(driver)
+                    .DoubleClick(driver.FindElement(locator))
                     .Perform();
 
             }
@@ -131,12 +136,12 @@ namespace KeywordDriven.ActionKeywords
         /// Right clicks element using Actions.
         /// Use to open context menus.
         /// </summary>
-        internal static void RightClick(By locator)
+        internal static void RightClick(IWebDriver driver, By locator)
         {
             try
             {
-                new Actions(Drivers.driver)
-                    .ContextClick(Drivers.driver.FindElement(locator))
+                new Actions(driver)
+                    .ContextClick(driver.FindElement(locator))
                     .Perform();
             }
             catch (Exception e)
@@ -146,11 +151,18 @@ namespace KeywordDriven.ActionKeywords
             }
         }
 
-        internal static bool InputByDriver(By locator, String data)
+        /// <summary>
+        /// Inputs text into element using standard SendKeys method. 
+        /// </summary>
+        /// <param name="driver"></param>
+        /// <param name="locator"></param>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        internal static bool InputByDriver(IWebDriver driver, By locator, String data)
         {
             try
             {
-                Drivers.driver.FindElement(locator).SendKeys(data);
+                driver.FindElement(locator).SendKeys(data);
                 return true;
             }
             catch (Exception e)
@@ -161,12 +173,19 @@ namespace KeywordDriven.ActionKeywords
             }
         }
 
-        internal static bool InputByJavascript(By locator, String data)
+        /// <summary>
+        /// Inputs text into element using JavaScript. Use when SendKeys doesn't work (e.g. due to overlays, custom controls, or performance issues).
+        /// </summary>
+        /// <param name="driver"></param>
+        /// <param name="locator"></param>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        internal static bool InputByJavascript(IWebDriver driver, By locator, String data)
         {
             try
             {
-                IJavaScriptExecutor jse = (IJavaScriptExecutor)Drivers.driver;
-                jse.ExecuteScript("arguments[0].value='" + data + "';", Drivers.driver.FindElement(locator));
+                IJavaScriptExecutor jse = (IJavaScriptExecutor)driver;
+                jse.ExecuteScript("arguments[0].value='" + data + "';", driver.FindElement(locator));
                 return true;
             }
             catch (Exception e)
@@ -177,11 +196,11 @@ namespace KeywordDriven.ActionKeywords
             }
         }
 
-        internal static bool SelectTextByDriver(By locator, string data)
+        internal static bool SelectTextByDriver(IWebDriver driver, By locator, string data)
         {
             try
             {
-                new SelectElement(Drivers.driver.FindElement(locator)).SelectByText(data);
+                new SelectElement(driver.FindElement(locator)).SelectByText(data);
                 return true;
             }
             catch (Exception e)
@@ -192,11 +211,11 @@ namespace KeywordDriven.ActionKeywords
             }
         }
 
-        internal static bool SelectValueByDriver(By locator, string data)
+        internal static bool SelectValueByDriver(IWebDriver driver, By locator, string data)
         {
             try
             {
-                new SelectElement(Drivers.driver.FindElement(locator)).SelectByValue(data);
+                new SelectElement(driver.FindElement(locator)).SelectByValue(data);
                 return true;
             }
             catch (Exception e)
@@ -207,11 +226,17 @@ namespace KeywordDriven.ActionKeywords
             }
         }
 
-        internal static bool ClearByDriver(By locator)
+        /// <summary>
+        /// Clears text from input field using standard Clear() method.
+        /// </summary>
+        /// <param name="driver"></param>
+        /// <param name="locator"></param>
+        /// <returns></returns>
+        internal static bool ClearByDriver(IWebDriver driver, By locator)
         {
             try
             {
-                Drivers.driver.FindElement(locator).Clear();
+                driver.FindElement(locator).Clear();
                 return true;
             }
             catch (Exception e)
@@ -222,12 +247,18 @@ namespace KeywordDriven.ActionKeywords
             }
         }
 
-        internal static bool ClearByJavascript(By locator)
+        /// <summary>
+        /// Clears text from input field using JavaScript.
+        /// </summary>
+        /// <param name="driver"></param>
+        /// <param name="locator"></param>
+        /// <returns></returns>
+        internal static bool ClearByJavascript(IWebDriver driver, By locator)
         {
             try
             {
-                IJavaScriptExecutor jse = (IJavaScriptExecutor)Drivers.driver;
-                jse.ExecuteScript("arguments[0].value = '';", Drivers.driver.FindElement(locator));
+                IJavaScriptExecutor jse = (IJavaScriptExecutor)driver;
+                jse.ExecuteScript("arguments[0].value = '';", driver.FindElement(locator));
                 return true;
             }
             catch (Exception e)
@@ -235,6 +266,244 @@ namespace KeywordDriven.ActionKeywords
                 Log.Info($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
                 ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
                 return false;
+            }
+        }
+
+        /// <summary>
+        /// Presses specified key on the element. Supports special keys like Enter, Tab, Escape, etc.
+        /// </summary>
+        /// <param name="driver"></param>
+        /// <param name="locator"></param>
+        /// <param name="key"></param>
+        /// <exception cref="Exception"></exception>
+        internal static void PressKey(IWebDriver driver,By locator, string key)
+        {
+            try
+            {
+                string keyToSend = key.Trim().ToLower() switch
+                {
+                    "enter" => Keys.Enter,
+                    "tab" => Keys.Tab,
+                    "escape" => Keys.Escape,
+                    "space" => Keys.Space,
+                    "backspace" => Keys.Backspace,
+                    "delete" => Keys.Delete,
+                    "arrowup" => Keys.ArrowUp,
+                    "arrowdown" => Keys.ArrowDown,
+                    _ => key
+                };
+
+                driver.FindElement(locator).SendKeys(keyToSend);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"PressKey [{locator}]: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Uploads a file by sending the file path to an input[type='file'] element.
+        /// </summary>
+        /// <param name="driver"></param>
+        /// <param name="locator"></param>
+        /// <param name="filePath"></param>
+        /// <exception cref="Exception"></exception>
+        internal static void UploadFile(IWebDriver driver, By locator, string filePath)
+        {
+            try
+            {
+                // Validate file exists
+                if (string.IsNullOrWhiteSpace(filePath))
+                    throw new ArgumentException(
+                        "File path cannot be null or empty.");
+
+                if (!File.Exists(filePath))
+                    throw new FileNotFoundException(
+                        $"File not found: \"{filePath}\"");
+
+                // Validate file size (warn if > 10MB) 
+                FileInfo fileInfo = new FileInfo(filePath);
+                double fileSizeMB = fileInfo.Length / (1024.0 * 1024.0);
+
+                if (fileSizeMB > 10)
+                    Console.WriteLine($"UploadFile | Large file detected: {fileSizeMB:F2} MB | " +
+                                      $"File: {fileInfo.Name}");
+
+                // Locate file input element
+                // Make hidden file inputs visible for upload
+
+                // If element is hidden, make it visible via JS
+                if (!driver.FindElement(locator).Displayed)
+                {
+                    ((IJavaScriptExecutor)driver)
+                        .ExecuteScript("arguments[0].style.display='block'; " +
+                                       "arguments[0].style.visibility='visible';", driver.FindElement(locator));
+
+                    Console.WriteLine($"UploadFile | Hidden input made visible via JS | " +
+                                      $"Locator: {locator}");
+                }
+
+                // Send file path to input 
+                driver.FindElement(locator).SendKeys(filePath);
+
+                // Wait for file name to appear in input ─
+                WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(10));
+                wait.Until(driver =>
+                {
+                    string value = driver.FindElement(locator).GetAttribute("value");
+                    return !string.IsNullOrEmpty(value);
+                });
+
+                string uploadedValue = driver.FindElement(locator).GetAttribute("value");
+
+                Console.WriteLine($"UploadFile" +
+                                  $"\n  Locator  : {locator}" +
+                                  $"\n  File     : {fileInfo.Name}" +
+                                  $"\n  Size     : {fileSizeMB:F2} MB" +
+                                  $"\n  Path     : {filePath}" +
+                                  $"\n  Input Val: {uploadedValue}");
+            }
+            catch (ArgumentException ex)
+            {
+                Console.WriteLine($"UploadFile | {ex.Message}");
+                throw;
+            }
+            catch (FileNotFoundException ex)
+            {
+                Console.WriteLine($"UploadFile | {ex.Message}");
+                throw;
+            }
+            catch (WebDriverTimeoutException)
+            {
+                throw new Exception(
+                    $"UploadFile | File input not ready within timeout | Locator: {locator}");
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(
+                    $"UploadFile | Locator: {locator} | Error: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Uploads multiple files to a multi-file input element.
+        /// </summary>
+        /// <param name="driver"></param>
+        /// <param name="locator"></param>
+        /// <param name="filePaths"></param>
+        /// <exception cref="Exception"></exception>
+        internal static void UploadMultipleFiles(IWebDriver driver,By locator, string[] filePaths)
+        {
+            try
+            {
+                if (filePaths == null || filePaths.Length == 0)
+                    throw new ArgumentException("File paths array cannot be null or empty.");
+
+                // Validate all files exist first
+                List<string> missingFiles = new List<string>();
+                foreach (string path in filePaths)
+                {
+                    if (!File.Exists(path))
+                        missingFiles.Add(path);
+                }
+
+                if (missingFiles.Count > 0)
+                    throw new FileNotFoundException(
+                        $"Files not found:\n  {string.Join("\n  ", missingFiles)}");
+
+                if (!driver.FindElement(locator).Displayed)
+                {
+                    ((IJavaScriptExecutor)driver)
+                        .ExecuteScript("arguments[0].style.display='block'; " +
+                                       "arguments[0].style.visibility='visible';", driver.FindElement(locator));
+                }
+
+                // ── Send all file paths joined by newline ─
+                string combinedPaths = string.Join("\n", filePaths);
+                driver.FindElement(locator).SendKeys(combinedPaths);
+
+                Console.WriteLine($"[PASS] UploadMultipleFiles" +
+                                  $"\n  Locator    : {locator}" +
+                                  $"\n  File Count : {filePaths.Length}" +
+                                  $"\n  Files      : {string.Join(", ", filePaths.Select(Path.GetFileName))}");
+            }
+            catch (ArgumentException ex)
+            {
+                Console.WriteLine($"UploadMultipleFiles - {ex.Message}");
+                throw;
+            }
+            catch (FileNotFoundException ex)
+            {
+                Console.WriteLine($"UploadMultipleFiles - {ex.Message}");
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(
+                    $"UploadMultipleFiles | Locator: {locator} | Error: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Takes a screenshot of a specific web element only (crops from full page).
+        /// </summary>
+        /// <param name="driver"></param>
+        /// <param name="locator"></param>
+        /// <param name="screenshotFolder"></param>
+        /// <param name="fileName"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        internal static string TakeElementScreenshot(IWebDriver driver, By locator, string screenshotFolder, string fileName)
+        {
+            try
+            {
+                if (driver == null)
+                    throw new InvalidOperationException(
+                        "Browser is not open. Call OpenBrowser before TakeElementScreenshot.");
+
+                // Create folder if it doesn't exist
+                if (!Directory.Exists(screenshotFolder))
+                {
+                    Directory.CreateDirectory(screenshotFolder);
+                    Console.WriteLine($"Created screenshot folder | {screenshotFolder}");
+                }
+
+                // Auto-generate filename if not provided
+                if (string.IsNullOrWhiteSpace(fileName))
+                    fileName = $"{fileName}_{DateTime.Now:yyyyMMdd_HHmmss_fff}";
+
+                // Sanitize filename
+                foreach (char c in Path.GetInvalidFileNameChars())
+                    fileName = fileName.Replace(c, '_');
+
+                string fullPath = Path.Combine(screenshotFolder, $"{fileName}.png");
+
+                // Locate the element
+                IWebElement element = driver.FindElement(locator);
+
+                // Cast the element to ITakesScreenshot
+                Screenshot elementScreenshot = ((ITakesScreenshot)element).GetScreenshot();
+
+                // Save to disk
+                elementScreenshot.SaveAsFile(fullPath);
+
+                Console.WriteLine($"Screenshot saved to | {fullPath}");
+
+                return fullPath;
+            }
+            catch (InvalidOperationException ex)
+            {
+                Console.WriteLine($"TakeElementScreenshot | {ex.Message}");
+                throw;
+            }
+            catch (ArgumentException ex)
+            {
+                Console.WriteLine($"TakeElementScreenshot | {ex.Message}");
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"TakeElementScreenshot failed | {ex.Message}");
             }
         }
 
@@ -254,15 +523,15 @@ namespace KeywordDriven.ActionKeywords
             {
                 By locator = Locators.GetLocator(obj);
 
-                Waits.WaitUntilClickable(locator, Drivers.driver);
+                Waits.WaitUntilClickable(Drivers.driver, locator);
 
                 ((IJavaScriptExecutor)Drivers.driver).ExecuteScript("arguments[0].scrollIntoView({block: 'center'});", locator);
 
-                if (Locators.ClickByDriver(locator))
+                if (Locators.ClickByDriver(Drivers.driver,locator))
                 {
                     DriverScript.outcome = (int)Outcome.Pass;
                 }
-                else if (Locators.ClickByJavascript(locator))
+                else if (Locators.ClickByJavascript(Drivers.driver,locator))
                 {
                     DriverScript.outcome = (int) Outcome.Pass;
                 }
@@ -289,11 +558,11 @@ namespace KeywordDriven.ActionKeywords
             {
                 By locator = Locators.GetLocator(obj);
 
-                Waits.WaitUntilClickable(locator, Drivers.driver);
+                Waits.WaitUntilClickable(Drivers.driver, locator);
 
-                if (!Locators.InputByDriver(locator, data))
+                if (!Locators.InputByDriver(Drivers.driver, locator, data))
                 {
-                    if (!Locators.InputByJavascript(locator, data))
+                    if (!Locators.InputByJavascript(Drivers.driver, locator, data))
                     {
                         DriverScript.outcome = (int) Outcome.Error;
                     }
@@ -328,12 +597,12 @@ namespace KeywordDriven.ActionKeywords
             {
                 By locator = Locators.GetLocator(obj);
 
-                Waits.WaitUntilClickable(locator, Drivers.driver);
+                Waits.WaitUntilClickable(Drivers.driver, locator);
                 WaitSeconds("", "2");
 
-                if (!Locators.ClearByDriver(locator))
+                if (!Locators.ClearByDriver(Drivers.driver, locator))
                 {
-                    if (!Locators.ClearByJavascript(locator))
+                    if (!Locators.ClearByJavascript(Drivers.driver, locator))
                     {
                         DriverScript.outcome = (int)Outcome.Error;
                     }
@@ -366,11 +635,11 @@ namespace KeywordDriven.ActionKeywords
             {
                 By locator = Locators.GetLocator(obj);
 
-                Waits.WaitUntilExists(locator, Drivers.driver);
+                Waits.WaitUntilExists(Drivers.driver, locator);
 
-                if (!Locators.SelectTextByDriver(locator, data))
+                if (!Locators.SelectTextByDriver(Drivers.driver, locator, data))
                 {
-                    if (!Locators.SelectValueByDriver(locator, data))
+                    if (!Locators.SelectValueByDriver(Drivers.driver, locator, data))
                     {
                         DriverScript.outcome = (int) Outcome.Error;
                     }
@@ -411,25 +680,12 @@ namespace KeywordDriven.ActionKeywords
             try
             {
                 By locator = Locators.GetLocator(obj);
-                switch (data.ToLower().Trim())
-                {
-                    case "enter":
-                        Drivers.driver.FindElement(locator).SendKeys(Keys.Enter);
-                        DriverScript.outcome = (int) Outcome.Pass;
-                        break;
-                    case "return":
-                        Drivers.driver.FindElement(locator).SendKeys(Keys.Return);
-                        DriverScript.outcome = (int) Outcome.Pass;
-                        break;
-                    case "tab":
-                        Drivers.driver.FindElement(locator).SendKeys(Keys.Tab);
-                        DriverScript.outcome = (int) Outcome.Pass;
-                        break;
-                    default:
-                        Drivers.driver.FindElement(locator).SendKeys(Keys.Enter);
-                        DriverScript.outcome = (int)Outcome.Pass;
-                        break;
-                }
+
+                Locators.PressKey(Drivers.driver, locator,data);
+
+                DriverScript.outcome = (int)Outcome.Pass;
+
+
             }
             catch (Exception e)
             {
@@ -439,8 +695,77 @@ namespace KeywordDriven.ActionKeywords
             }
         }
 
-        public static void UploadFiles(String obj, String data)
-        { }
+        public static void UploadFile(String obj, String data)
+        {
+            Log.Info($"{MethodBase.GetCurrentMethod().Name} \"{data}\"");
+            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} \"{data}\"");
+            try
+            {
+                By locator = Locators.GetLocator(obj);
+
+                Waits.WaitUntilExists(Drivers.driver, locator);
+
+                Locators.UploadFile(Drivers.driver, locator, data);
+
+                DriverScript.outcome = (int)Outcome.Pass;
+
+            }
+            catch (Exception e)
+            {
+                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                DriverScript.outcome = (int)Outcome.Error;
+            }
+        }
+
+        public static void UploadMultipleFiles(String obj, String data)
+        {
+            Log.Info($"{MethodBase.GetCurrentMethod().Name} \"{data}\"");
+            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} \"{data}\"");
+            try
+            {
+                By locator = Locators.GetLocator(obj);
+
+                Waits.WaitUntilExists(Drivers.driver, locator);
+
+                string[] filepaths = data.Split(',');
+
+                Locators.UploadMultipleFiles(Drivers.driver, locator, filepaths);
+
+                DriverScript.outcome = (int)Outcome.Pass;
+
+            }
+            catch (Exception e)
+            {
+                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                DriverScript.outcome = (int)Outcome.Error;
+            }
+        }
+        
+        public static void TakeElementScreenshot(String obj, String data)
+        {
+            try
+            {
+                Log.Info($"{MethodBase.GetCurrentMethod().Name}");
+                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name}");
+
+                By locator = Locators.GetLocator(obj);
+
+                Waits.WaitUntilExists(Drivers.driver, locator);
+
+                Locators.TakeElementScreenshot(Drivers.driver, locator, "", data);
+
+                DriverScript.outcome = 1;
+
+            }
+            catch (Exception e)
+            {
+                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                DriverScript.outcome = (int)Outcome.Error;
+            }
+        }
 
         #endregion
     }

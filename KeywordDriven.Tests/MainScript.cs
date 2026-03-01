@@ -8,12 +8,11 @@ namespace KeywordDriven.Tests
 {
     public class MainScript
     {
-        public static string assemblyDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-        public static string projectDir = Path.GetDirectoryName(Path.GetDirectoryName(Path.GetDirectoryName(assemblyDir)));
-        
-        public static string Path_TestDefinition = Path.Combine(projectDir, @"TestDefinition\TestCases.xlsx");
-        public static string Path_Log = Path.Combine(projectDir, @"TestLogs\log.txt");
-        public static string Path_Report = Path.Combine(projectDir, @"TestReports\index.html");
+
+        public static string Path_TestDefinition = Path.Combine(PathSetting.projectDir, @"TestDefinition\TestCases.xlsx");
+        public static string Path_Log = Path.Combine(PathSetting.projectDir, @"TestLogs\log.txt");
+        public static string Path_Report = Path.Combine(PathSetting.projectDir, @"TestReports\index.html");
+        public static string Path_ScreenShots = Path.Combine(PathSetting.projectDir, @"ScreenShots\");
 
         [SetUp]
         public void TestSetUp()
@@ -22,6 +21,7 @@ namespace KeywordDriven.Tests
             ExcelManager.SetExcel(Path_TestDefinition);
             Log.SetLogger(Path_Log);
             ExtentReporter.SetExtentReporter(Path_Report);
+            ScreenShot.SetScreenShot(Path_ScreenShots);
 
             DriverSetting.DriverType = "local";
             DriverSetting.Headless = false;

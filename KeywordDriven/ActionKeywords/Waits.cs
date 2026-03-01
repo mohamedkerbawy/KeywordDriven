@@ -35,7 +35,7 @@ namespace KeywordDriven.ActionKeywords
         /// <param name="by"></param>
         /// <param name="driver"></param>
         /// <returns></returns>
-        internal static bool WaitUntilClickable(By by, IWebDriver driver, int? timeoutSeconds = null)
+        internal static bool WaitUntilClickable(IWebDriver driver, By by, int? timeoutSeconds = null)
         {
             var wait = Waits.Create(driver, timeoutSeconds);
 
@@ -82,7 +82,7 @@ namespace KeywordDriven.ActionKeywords
         /// <param name="by"></param>
         /// <param name="driver"></param>
         /// <returns></returns>
-        internal static bool WaitUntilExists(By by, IWebDriver driver, int? timeoutSeconds = null)
+        internal static bool WaitUntilExists(IWebDriver driver, By by, int? timeoutSeconds = null)
         {
             var wait = Waits.Create(driver, timeoutSeconds);
 
@@ -116,7 +116,7 @@ namespace KeywordDriven.ActionKeywords
         /// <param name="driver"></param>
         /// <param name="timeoutSeconds"></param>
         /// <returns></returns>
-        internal static bool WaitUntilNotExists(By by, IWebDriver driver, int? timeoutSeconds = null)
+        internal static bool WaitUntilNotExists(IWebDriver driver, By by, int? timeoutSeconds = null)
         {
             var wait = Waits.Create(driver, timeoutSeconds);
 
@@ -150,7 +150,7 @@ namespace KeywordDriven.ActionKeywords
         /// <param name="driver"></param>
         /// <param name="timeoutSeconds"></param>
         /// <returns></returns>
-        internal static bool WaitUntilVisibleByDriver(By by, IWebDriver driver, int? timeoutSeconds = null)
+        internal static bool WaitUntilVisibleByDriver(IWebDriver driver, By by, int? timeoutSeconds = null)
         {
             var wait = Waits.Create(driver, timeoutSeconds);
 
@@ -178,7 +178,7 @@ namespace KeywordDriven.ActionKeywords
         /// <param name="driver"></param>
         /// <param name="timeoutSeconds"></param>
         /// <returns></returns>
-        internal static bool WaitUntilVisibleByJs(By by, IWebDriver driver, int? timeoutSeconds = null)
+        internal static bool WaitUntilVisibleByJs(IWebDriver driver, By by, int? timeoutSeconds = null)
         {
             var wait = Waits.Create(driver, timeoutSeconds);
             var js = (IJavaScriptExecutor)driver;
@@ -219,7 +219,7 @@ namespace KeywordDriven.ActionKeywords
         /// <param name="driver"></param>
         /// <param name="timeoutSeconds"></param>
         /// <returns></returns>
-        internal static bool WaitUntilAllVisible(By by, IWebDriver driver, int? timeoutSeconds = null)
+        internal static bool WaitUntilAllVisible(IWebDriver driver, By by, int? timeoutSeconds = null)
         {
             var wait = Waits.Create(driver, timeoutSeconds);
 
@@ -246,7 +246,7 @@ namespace KeywordDriven.ActionKeywords
         /// <param name="by"></param>
         /// <param name="driver"></param>
         /// <returns></returns>
-        internal static bool WaitUntilNotVisibleByDriver(By by, IWebDriver driver, int? timeoutSeconds = null)
+        internal static bool WaitUntilNotVisibleByDriver(IWebDriver driver, By by, int? timeoutSeconds = null)
         {
             var wait = Waits.Create(driver, timeoutSeconds);
 
@@ -277,7 +277,7 @@ namespace KeywordDriven.ActionKeywords
         /// <param name="by"></param>
         /// <param name="driver"></param>
         /// <returns></returns>
-        internal static bool WaitUntilNotVisibleByJs(By by, IWebDriver driver, int? timeoutSeconds = null)
+        internal static bool WaitUntilNotVisibleByJs(IWebDriver driver, By by, int? timeoutSeconds = null)
         {
             var wait = Waits.Create(driver, timeoutSeconds);
             var js = (IJavaScriptExecutor)driver;
@@ -325,7 +325,7 @@ namespace KeywordDriven.ActionKeywords
         /// <param name="by"></param>
         /// <param name="driver"></param>
         /// <returns></returns>
-        internal static bool WaitUntilAllNotVisible(By by, IWebDriver driver, int? timeoutSeconds = null)
+        internal static bool WaitUntilAllNotVisible(IWebDriver driver, By by, int? timeoutSeconds = null)
         {
             var wait = Waits.Create(driver, timeoutSeconds);
 
@@ -354,7 +354,7 @@ namespace KeywordDriven.ActionKeywords
         /// <param name="by"></param>
         /// <param name="driver"></param>
         /// <returns></returns>
-        internal static bool WaitUntilExistsAndVisible(By by, IWebDriver driver, int? timeoutSeconds = null)
+        internal static bool WaitUntilExistsAndVisible(IWebDriver driver, By by, int? timeoutSeconds = null)
         {
             var wait = Waits.Create(driver, timeoutSeconds);
 
@@ -387,7 +387,7 @@ namespace KeywordDriven.ActionKeywords
         /// <param name="by"></param>
         /// <param name="driver"></param>
         /// <returns></returns>
-        internal static bool WaitUntilEditable(By by, IWebDriver driver, int? timeoutSeconds = null)
+        internal static bool WaitUntilEditable(IWebDriver driver, By by, int? timeoutSeconds = null)
         {
             var wait = Waits.Create(driver, timeoutSeconds);
 
@@ -412,7 +412,7 @@ namespace KeywordDriven.ActionKeywords
         /// </summary>
         /// <param name="by"></param>
         /// <param name="driver"></param>
-        internal static bool WaitUntilNotEditable(By by, IWebDriver driver, int? timeoutSeconds = null)
+        internal static bool WaitUntilNotEditable(IWebDriver driver, By by, int? timeoutSeconds = null)
         {
             var wait = Waits.Create(driver, timeoutSeconds);
 
@@ -558,7 +558,7 @@ namespace KeywordDriven.ActionKeywords
             {
                 By by = Locators.GetLocator(obj);
 
-                if (Waits.WaitUntilClickable(by, Drivers.driver))
+                if (Waits.WaitUntilClickable(Drivers.driver, by))
                 {
                     DriverScript.outcome = (int) Outcome.Pass;
                 }
@@ -580,7 +580,7 @@ namespace KeywordDriven.ActionKeywords
             {
                 By by = Locators.GetLocator(obj);
 
-                if (Waits.WaitUntilExists(by, Drivers.driver))
+                if (Waits.WaitUntilExists(Drivers.driver, by))
                 {
                     DriverScript.outcome = (int)Outcome.Pass;
                 }
@@ -602,7 +602,7 @@ namespace KeywordDriven.ActionKeywords
             {
                 By by = Locators.GetLocator(obj);
 
-                if (Waits.WaitUntilNotExists(by, Drivers.driver))
+                if (Waits.WaitUntilNotExists(Drivers.driver, by))
                 {
                     DriverScript.outcome = (int) Outcome.Pass;
                 }
@@ -623,11 +623,11 @@ namespace KeywordDriven.ActionKeywords
             {
                 By by = Locators.GetLocator(obj);
 
-                if (Waits.WaitUntilVisibleByDriver(by, Drivers.driver))
+                if (Waits.WaitUntilVisibleByDriver(Drivers.driver, by))
                 {
                     DriverScript.outcome = (int)Outcome.Pass;
                 }
-                else if (Waits.WaitUntilVisibleByJs(by, Drivers.driver))
+                else if (Waits.WaitUntilVisibleByJs(Drivers.driver, by))
                 {
                     DriverScript.outcome = (int)Outcome.Pass;
                 }
@@ -649,7 +649,7 @@ namespace KeywordDriven.ActionKeywords
             {
                 By by = Locators.GetLocator(obj);
 
-                if (Waits.WaitUntilAllVisible(by, Drivers.driver))
+                if (Waits.WaitUntilAllVisible(Drivers.driver, by))
                 {
                     DriverScript.outcome = (int) Outcome.Pass;
                 }
@@ -671,11 +671,11 @@ namespace KeywordDriven.ActionKeywords
             {
                 By by = Locators.GetLocator(obj);
 
-                if (Waits.WaitUntilNotVisibleByDriver(by, Drivers.driver))
+                if (Waits.WaitUntilNotVisibleByDriver(Drivers.driver, by))
                 {
                     DriverScript.outcome = (int) Outcome.Pass;
                 }
-                else if(Waits.WaitUntilNotVisibleByJs(by, Drivers.driver))
+                else if(Waits.WaitUntilNotVisibleByJs(Drivers.driver, by))
                 {
                     DriverScript.outcome = (int) Outcome.Pass;
                 }
@@ -697,7 +697,7 @@ namespace KeywordDriven.ActionKeywords
             {
                 By by = Locators.GetLocator(obj);
 
-                if (Waits.WaitUntilAllNotVisible(by, Drivers.driver))
+                if (Waits.WaitUntilAllNotVisible(Drivers.driver, by))
                 {
                     DriverScript.outcome = (int) Outcome.Pass;
                 }
@@ -720,7 +720,7 @@ namespace KeywordDriven.ActionKeywords
             {
                 By by = Locators.GetLocator(obj);
 
-                if (Waits.WaitUntilExistsAndVisible(by, Drivers.driver))
+                if (Waits.WaitUntilExistsAndVisible(Drivers.driver, by))
                 {
                     DriverScript.outcome = (int)Outcome.Pass;
                 }
@@ -741,7 +741,7 @@ namespace KeywordDriven.ActionKeywords
             {
                 By by = Locators.GetLocator(obj);
 
-                if (Waits.WaitUntilEditable(by, Drivers.driver))
+                if (Waits.WaitUntilEditable(Drivers.driver, by))
                 {
                     DriverScript.outcome = (int) Outcome.Pass;
                 }
@@ -762,7 +762,7 @@ namespace KeywordDriven.ActionKeywords
             {
                 By by = Locators.GetLocator(obj);
 
-                if (Waits.WaitUntilNotEditable(by, Drivers.driver))
+                if (Waits.WaitUntilNotEditable(Drivers.driver, by))
                 {
                     DriverScript.outcome = (int) Outcome.Pass;
                 }
