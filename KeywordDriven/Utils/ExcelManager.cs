@@ -1,6 +1,8 @@
-﻿using System;
+﻿using KeywordDriven.Config;
+using System;
+using System.IO;
+using System.Runtime.InteropServices;
 using Excel = Microsoft.Office.Interop.Excel;
-using KeywordDriven.Config;
 
 namespace KeywordDriven.Utils
 {
@@ -10,20 +12,68 @@ namespace KeywordDriven.Utils
         private static Excel.Workbook ExcelWBook;
         private static Excel.Worksheet ExcelWSheet;
 
-        public static void SetExcel(String path)
-        {            
-            ExcelApp = new Excel.Application
+        public static void SetExcel(string path,string fileName)
+        {
+            Excel.Application excelApp = null;
+            Excel.Workbook excelWBook = null;
+
+            try
             {
-                Visible = false
-            };
-            ExcelWBook = ExcelApp.Workbooks.Open(path);
+                if (ExcelApp == null)
+                    ExcelApp = new Excel.Application { Visible = false };
+
+                // Check if the specific workbook is already open
+                bool isAlreadyOpen = false;
+                if (excelApp.Workbooks.Count > 0)
+                {
+                    foreach (Excel.Workbook wb in excelApp.Workbooks)
+                    {
+                        // Compare full paths to ensure it's the exact same file
+                        if (string.Equals(wb.FullName, Path.GetFullPath(path), StringComparison.OrdinalIgnoreCase))
+                        {
+                            excelWBook = wb;
+                            isAlreadyOpen = true;
+                            Console.WriteLine("Workbook is already open. Using existing instance.");
+                            break;
+                        }
+                    }
+                }
+
+                // If not open, open it now
+                if (!isAlreadyOpen)
+                {
+                    excelWBook = excelApp.Workbooks.Open(Path.Combine(path, fileName + ".xlsx"));
+                }
+
+                ExcelApp = excelApp;
+                ExcelWBook = excelWBook;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error handling Excel file: {ex.Message}");
+            }
         }
 
         public static void SaveCloseExcel()
         {
             ExcelWBook.Save();
-            ExcelWBook.Close(0);
-            ExcelApp.Quit();
+            CloseExcel();
+        }
+
+        public static void CloseExcel()
+        {
+            if (ExcelWBook != null)
+            {
+                ExcelWBook.Close(false);
+            }
+            if (ExcelApp != null)
+            {
+                ExcelApp.Quit();
+            }
+
+            // Force Garbage Collection to ensure the process actually exits
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
         }
 
         internal static string GetCellData(int rowNum, int colNum, String sheetName)

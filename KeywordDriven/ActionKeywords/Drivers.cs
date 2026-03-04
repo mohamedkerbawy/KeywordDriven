@@ -411,71 +411,6 @@ namespace KeywordDriven.ActionKeywords
             }
         }
 
-        /// <summary>
-        /// Takes a screenshot of the entire browser viewport and saves it to disk.
-        /// Auto-generates filename with timestamp if no name provided.
-        /// </summary>
-        /// <param name="driver"></param>
-        /// <param name="screenshotFolder">Folder path to save screenshot (default: ./Screenshots)</param>
-        /// <param name="fileName">Custom file name without extension (default: auto timestamp)</param>
-        /// <param name="imageFormat">Image format: png | jpg | bmp (default: png)</param>
-        /// <returns></returns>
-        /// <exception cref="Exception"></exception>
-        internal static string TakeScreenshot(IWebDriver driver, string screenshotFolder, string fileName)
-        {
-            try
-            {
-                if (driver == null)
-                    throw new InvalidOperationException(
-                        "Browser is not open. Call OpenBrowser before TakeElementScreenshot.");
-
-                // Create folder if it doesn't exist
-                if (!Directory.Exists(screenshotFolder))
-                {
-                    Directory.CreateDirectory(screenshotFolder);
-                    Console.WriteLine($"Created screenshot folder | {screenshotFolder}");
-                }
-
-                // Auto-generate filename if not provided
-                if (string.IsNullOrWhiteSpace(fileName))
-                    fileName = $"Screenshot_{DateTime.Now:yyyyMMdd_HHmmss_fff}";
-
-                // Sanitize filename — remove invalid characters
-                foreach (char c in Path.GetInvalidFileNameChars())
-                    fileName = fileName.Replace(c, '_');
-
-                string fullPath = Path.Combine(screenshotFolder, $"{fileName}.png");
-
-                // Cast the Driver to ITakesScreenshot
-                ITakesScreenshot screenshotDriver = (ITakesScreenshot)driver;
-
-                // Capture the screenshot
-                Screenshot screenshot = screenshotDriver.GetScreenshot();
-
-                // Save to disk
-                screenshot.SaveAsFile(fullPath);
-
-                Console.WriteLine($"Screenshot saved to | {fullPath}");
-
-                // Return path
-                return fullPath;
-            }
-            catch (InvalidOperationException ex)
-            {
-                Console.WriteLine($"TakeScreenshot | {ex.Message}");
-                throw;
-            }
-            catch (ArgumentException ex)
-            {
-                Console.WriteLine($"TakeScreenshot | {ex.Message}");
-                throw;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"TakeScreenshot failed | {ex.Message}");
-            }
-        }
-
     }
     
     public partial class Keywords
@@ -662,25 +597,6 @@ namespace KeywordDriven.ActionKeywords
             }
         }
 
-        public static void TakeScreenshot(String obj, String data)
-        {
-            try
-            {
-                Log.Info($"{MethodBase.GetCurrentMethod().Name}");
-                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name}");
-
-                Drivers.TakeScreenshot(Drivers.driver, "", data);
-
-                DriverScript.outcome = 1;
-
-            }
-            catch (Exception e)
-            {
-                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                DriverScript.outcome = (int)Outcome.Error;
-            }
-        }
         #endregion
     }
 }

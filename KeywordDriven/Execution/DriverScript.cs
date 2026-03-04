@@ -101,9 +101,9 @@ namespace KeywordDriven.Execution
                         {
                             ExcelManager.SetCellData(Outcome.Fail.ToString(), iTestcase, ExcelSetting.Col_TestCases_Result, ExcelSetting.Sheet_TestCases);
 
-                            Log.EndTestCase(testCaseID);
+                            Log.EndTestCase(outcome,testCaseID);
                             ExtentReporter.Error($"TestCase {testCaseID}_{testCaseTitle} {Outcome.Fail.ToString()}");
-                            ExtentReporter.EndTestCase(testCaseID + "_" + testCaseTitle);
+                            ExtentReporter.EndTestCase(outcome, testCaseID + "_" + testCaseTitle);
                             break;
                         }
                         //check The Error results for the current test step and set the overall test case result as Error if any test step has Error result
@@ -111,9 +111,9 @@ namespace KeywordDriven.Execution
                         {
                             ExcelManager.SetCellData(Outcome.Error.ToString(), iTestcase, ExcelSetting.Col_TestCases_Result, ExcelSetting.Sheet_TestCases);
 
-                            Log.EndTestCase(testCaseID);
+                            Log.EndTestCase(outcome, testCaseID);
                             ExtentReporter.Error($"TestCase {testCaseID}_{testCaseTitle} {Outcome.Error.ToString()}");
-                            ExtentReporter.EndTestCase(testCaseID + "_" + testCaseTitle);
+                            ExtentReporter.EndTestCase(outcome, testCaseID + "_" + testCaseTitle);
                             break;
                         }
                     }
@@ -123,27 +123,27 @@ namespace KeywordDriven.Execution
                     {
                         ExcelManager.SetCellData(Outcome.Pass.ToString(), iTestcase, ExcelSetting.Col_TestCases_Result, ExcelSetting.Sheet_TestCases);
 
-                        Log.EndTestCase(testCaseID);
+                        Log.EndTestCase(outcome, testCaseID);
                         ExtentReporter.Pass($"TestCase {testCaseID}_{testCaseTitle} {Outcome.Pass.ToString()}");
-                        ExtentReporter.EndTestCase(testCaseID + "_" + testCaseTitle);
+                        ExtentReporter.EndTestCase(outcome, testCaseID + "_" + testCaseTitle);
                     }
                     //check if any results is Fail for the current test case and set the overall test case result as Fail
                     else if (outcome == (int)Outcome.Fail)
                     {
                         ExcelManager.SetCellData(Outcome.Fail.ToString(), iTestcase, ExcelSetting.Col_TestCases_Result, ExcelSetting.Sheet_TestCases);
 
-                        Log.EndTestCase(testCaseID);
+                        Log.EndTestCase(outcome, testCaseID);
                         ExtentReporter.Fail($"TestCase {testCaseID}_{testCaseTitle} {Outcome.Fail.ToString()}");
-                        ExtentReporter.EndTestCase(testCaseID + "_" + testCaseTitle);
+                        ExtentReporter.EndTestCase(outcome, testCaseID + "_" + testCaseTitle);
                     }
                     //check if any results is Error for the current test case and set the overall test case result as Error
                     else if (outcome == (int)Outcome.Error)
                     {
                         ExcelManager.SetCellData(Outcome.Error.ToString(), iTestcase, ExcelSetting.Col_TestCases_Result, ExcelSetting.Sheet_TestCases);
 
-                        Log.EndTestCase(testCaseID);
+                        Log.EndTestCase(outcome, testCaseID);
                         ExtentReporter.Error($"TestCase {testCaseID}_{testCaseTitle} {Outcome.Error.ToString()}");
-                        ExtentReporter.EndTestCase(testCaseID + "_" + testCaseTitle);
+                        ExtentReporter.EndTestCase(outcome, testCaseID + "_" + testCaseTitle);
                     }
                 }
             }

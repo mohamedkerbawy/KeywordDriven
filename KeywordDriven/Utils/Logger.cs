@@ -3,80 +3,77 @@ using System.IO;
 
 namespace KeywordDriven.Utils
 {
+    public enum LogLevel
+    {
+        STEP,
+        INFO,
+        PASS,
+        FAIL,
+        WARNING,
+        ERROR,
+        FATAL,
+        DEBUG
+    }
+
     public class Log
     {
         private static string _filepath;
 
         private static object _setLoggerLock = new object();
 
-        public static void SetLogger(string filepath)
+        public static void SetLogger(string logDirectory, string logFileName = null)
+        {
+            if (!Directory.Exists(Path.Combine(logDirectory))) 
+                Directory.CreateDirectory(Path.Combine(logDirectory));
+
+            logFileName ??= $"TestLog_{DateTime.Now:yyyyMMdd_HHmmss}.txt";
+            _filepath = Path.Combine(logDirectory, logFileName);
+        }
+
+        internal static void WriteLog(LogLevel level, string message)
         {
             lock (_setLoggerLock)
             {
-                _filepath = filepath;
+                string logEntry = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{level,-7}] {message}";
 
-                using (var log = File.CreateText(_filepath))
+                // Write to Console (for IDE output)
+                Console.WriteLine(logEntry);
+
+                // Write to File
+                if (!string.IsNullOrEmpty(_filepath))
                 {
-                    log.WriteLine($"Starting timestamp: {DateTime.Now.ToLocalTime()}");
+                    File.AppendAllLines(_filepath, [logEntry]);
                 }
             }
         }
-
-        private static void WriteLine(string text)
-        {
-            using (var log = File.AppendText(_filepath))
-            {
-                log.WriteLine(text);
-            }
-        }
-
-        private static void Write(string text)
-        {
-            using (var log = File.AppendText(_filepath))
-            {
-                log.Write(text);
-            }
-        }      
         
         internal static void StartTestCase(String sTestCaseName)
         {
-            Info("Start TestCase " + sTestCaseName);
+            Info($"Start TestCase {sTestCaseName}");
         }
         
-        internal static void EndTestCase(String sTestCaseName)
+        internal static void EndTestCase(int outcome, String sTestCaseName)
         {
-            Info("End TestCase " + sTestCaseName);
-            WriteLine($"-------------------------");
+            if (outcome == 0)
+                Pass($"End TestCase {sTestCaseName}, Result: PASS");
+            else if (outcome == 1)
+                Fail($"End TestCase {sTestCaseName}, Result: FAIL");
+            else if (outcome == 2)
+                Error($"End TestCase {sTestCaseName}, Result: ERROR");
+            else
+                Info($"End TestCase {sTestCaseName}");
         }
+
+        internal static void Info(string message) => WriteLog(LogLevel.INFO, message);
         
-        internal static void Info(string message)
-        {
-            WriteLine($"[INFO]: {message}");
-        }
+        internal static void Pass(string message) => WriteLog(LogLevel.PASS, message);
         
-        internal static void Step(string message)
-        {
-            WriteLine($"    [STEP]: {message}");
-        }
-       
-        internal static void Warning(string message)
-        {
-            WriteLine($"[WARNING]: {message}");
-        }
-     
-        internal static void Error(string message)
-        {
-            WriteLine($"[ERROR]: {message}");
-        }
+        internal static void Fail(string message) => WriteLog(LogLevel.FAIL, message);
         
-        internal static void Fatal(string message)
-        {
-            WriteLine($"[FATAL]: {message}");
-        }
+        internal static void Warning(string message) => WriteLog(LogLevel.WARNING, message);
         
-        internal static void Debug(string message)
-        {
-            WriteLine($"[DEBUG]: {message}");
-        }
+        internal static void Error(string message) => WriteLog(LogLevel.ERROR, message);
+        
+        internal static void Fatal (string message) => WriteLog(LogLevel.FATAL, message);
     }
 }

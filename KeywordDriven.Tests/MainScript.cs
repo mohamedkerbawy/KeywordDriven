@@ -1,27 +1,22 @@
-using System.IO;
-using NUnit.Framework;
 using KeywordDriven.Config;
-using KeywordDriven.Utils;
 using KeywordDriven.Execution;
+using KeywordDriven.Utils;
+using NUnit.Framework;
+using System;
+using System.IO;
 
 namespace KeywordDriven.Tests
 {
     public class MainScript
     {
-
-        public static string Path_TestDefinition = Path.Combine(PathSetting.projectDir, @"TestDefinition\TestCases.xlsx");
-        public static string Path_Log = Path.Combine(PathSetting.projectDir, @"TestLogs\log.txt");
-        public static string Path_Report = Path.Combine(PathSetting.projectDir, @"TestReports\index.html");
-        public static string Path_ScreenShots = Path.Combine(PathSetting.projectDir, @"ScreenShots\");
-
         [SetUp]
         public void TestSetUp()
         {
-
-            ExcelManager.SetExcel(Path_TestDefinition);
-            Log.SetLogger(Path_Log);
-            ExtentReporter.SetExtentReporter(Path_Report);
-            ScreenShot.SetScreenShot(Path_ScreenShots);
+            ExcelManager.SetExcel(PathSetting.Path_TestDefinitionDir, "TestCases");
+            
+            Log.SetLogger(PathSetting.Path_LogDir);
+            
+            ExtentReporter.SetExtentReporter(PathSetting.Path_ReportDir);
 
             DriverSetting.DriverType = "local";
             DriverSetting.Headless = false;
