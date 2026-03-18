@@ -887,10 +887,52 @@ namespace KeywordDriven.ActionKeywords
         }
 
         public static void CheckCheckbox(String obj, String data)
-        { }
+        {
+            Log.Info($"{MethodBase.GetCurrentMethod().Name} {data} from \"{obj}\"");
+            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} {data} from \"{obj}\"");
+
+            try
+            {
+                By locator = Locators.GetLocator(obj);
+
+                Waits.WaitUntilExists(Drivers.driver, locator);
+
+                Locators.CheckCheckbox(Drivers.driver, locator);
+
+                DriverScript.outcome = (int)Outcome.Pass;
+
+            }
+            catch (Exception e)
+            {
+                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                DriverScript.outcome = (int)Outcome.Error;
+            }
+        }
 
         public static void SelectRadioButton(String obj, String data)
-        { }
+        {
+            Log.Info($"{MethodBase.GetCurrentMethod().Name} {data} from \"{obj}\"");
+            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} {data} from \"{obj}\"");
+
+            try
+            {
+                By locator = Locators.GetLocator(obj);
+
+                Waits.WaitUntilExists(Drivers.driver, locator);
+
+                Locators.SelectRadioButton(Drivers.driver, locator);
+
+                DriverScript.outcome = (int)Outcome.Pass;
+
+            }
+            catch (Exception e)
+            {
+                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                DriverScript.outcome = (int)Outcome.Error;
+            }
+        }
 
         public static void PressKey(String obj, String data)
         {
