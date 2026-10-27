@@ -55,9 +55,11 @@ namespace KeywordDriven.ActionKeywords
                     bool isEnabled = element.Enabled;
                     bool isNotDisabled = element.GetAttribute("disabled") == null;
                     bool isNotHidden = element.GetAttribute("aria-hidden") != "true";
+                    bool isNotAriaDisabled = element.GetAttribute("aria-disabled") != "true";
                     bool hasSize = element.Size.Width > 0 && element.Size.Height > 0;
 
-                    return (isDisplayed && isEnabled && isNotDisabled && isNotHidden && hasSize)
+                    return (isDisplayed && isEnabled && isNotDisabled && isNotHidden
+                        && isNotAriaDisabled && hasSize)
                         ? true
                         : false; // not ready yet — retry
                 }
@@ -193,19 +195,11 @@ namespace KeywordDriven.ActionKeywords
                 try
                 {
                     var element = d.FindElement(by);
-
-                    var visibility = js.ExecuteScript(
-                        "return window.getComputedStyle(arguments[0]).visibility;", element)?.ToString();
-                    var display = js.ExecuteScript(
-                        "return window.getComputedStyle(arguments[0]).display;", element)?.ToString();
-                    var opacity = js.ExecuteScript(
-                        "return window.getComputedStyle(arguments[0]).opacity;", element)?.ToString();
-
-                    bool isVisibleByCss = visibility != "hidden"
-                                       && display != "none"
-                                       && opacity != "0";
-
-                    return isVisibleByCss ? true : false;
+                    return element.Displayed
+                        && (bool)js.ExecuteScript(
+                            "const style = window.getComputedStyle(arguments[0]);" +
+                            "return style.visibility !== 'hidden' && style.display !== 'none' && Number(style.opacity) > 0;",
+                            element);
                 }
                 catch (NoSuchElementException) { return false; }
                 catch (StaleElementReferenceException) { return false; }
@@ -261,11 +255,11 @@ namespace KeywordDriven.ActionKeywords
                 }
                 catch (NoSuchElementException)
                 {
-                    return false; // not in DOM at all — considered invisible
+                    return true; // absent elements are not visible
                 }
                 catch (StaleElementReferenceException)
                 {
-                    return false; // element was removed from DOM
+                    return true; // element was removed from DOM
                 }
             });
         }
@@ -292,25 +286,15 @@ namespace KeywordDriven.ActionKeywords
                 try
                 {
                     var element = d.FindElement(by);
-
-                    var visibility = js.ExecuteScript(
-                        "return window.getComputedStyle(arguments[0]).visibility;", element)?.ToString();
-                    var display = js.ExecuteScript(
-                        "return window.getComputedStyle(arguments[0]).display;", element)?.ToString();
-                    var opacity = js.ExecuteScript(
-                        "return window.getComputedStyle(arguments[0]).opacity;", element)?.ToString();
-
-                    bool isHiddenByCss = visibility == "hidden"
-                                      || display == "none"
-                                      || opacity == "0";
-
-                    bool isHiddenBySelenium = !element.Displayed;
-
-                    return isHiddenByCss || isHiddenBySelenium;
+                    return !element.Displayed
+                        || (bool)js.ExecuteScript(
+                            "const style = window.getComputedStyle(arguments[0]);" +
+                            "return style.visibility === 'hidden' || style.display === 'none' || Number(style.opacity) <= 0;",
+                            element);
                 }
                 catch (NoSuchElementException)
                 {
-                    return false;
+                    return true;
                 }
                 catch (StaleElementReferenceException)
                 {
@@ -455,7 +439,7 @@ namespace KeywordDriven.ActionKeywords
         {
             var wait = Waits.Create(driver, timeoutSeconds);
 
-            return wait.Until(d => d.Url.Contains(expectedText));
+            return wait.Until(d => d.Url.Contains(expectedText, StringComparison.Ordinal));
         }
 
         /// <summary>
@@ -484,7 +468,7 @@ namespace KeywordDriven.ActionKeywords
             var wait = Waits.Create(driver, timeoutSeconds);
 
             return wait.Until(d =>
-                d.Url.Equals(expectedUrl, StringComparison.OrdinalIgnoreCase)
+                d.Url.Equals(expectedUrl, StringComparison.Ordinal)
             );
         }
 
@@ -533,6 +517,50 @@ namespace KeywordDriven.ActionKeywords
             var regex = new Regex(regexPattern, RegexOptions.IgnoreCase);
 
             return wait.Until(d => regex.IsMatch(d.Url));
+        }
+
+        /// <summary>
+        /// Waits until the browser reports that the document has finished loading.
+        /// </summary>
+        internal static bool WaitUntilPageLoaded(IWebDriver driver, int? timeoutSeconds = null)
+        {
+            var wait = Waits.Create(driver, timeoutSeconds);
+            var js = (IJavaScriptExecutor)driver;
+
+            return wait.Until(d => js.ExecuteScript("return document.readyState;")?.ToString() == "complete");
+        }
+
+        /// <summary>
+        /// Waits until the located element's rendered text contains the expected text.
+        /// </summary>
+        internal static bool WaitUntilTextContains(
+            IWebDriver driver,
+            By by,
+            string expectedText,
+            int? timeoutSeconds = null)
+        {
+            var wait = Waits.Create(driver, timeoutSeconds);
+            wait.IgnoreExceptionTypes(
+                typeof(NoSuchElementException),
+                typeof(StaleElementReferenceException));
+
+            return wait.Until(d =>
+            {
+                try
+                {
+                    var element = d.FindElement(by);
+                    return element.Displayed
+                        && element.Text.Contains(expectedText, StringComparison.Ordinal);
+                }
+                catch (NoSuchElementException)
+                {
+                    return false;
+                }
+                catch (StaleElementReferenceException)
+                {
+                    return false;
+                }
+            });
         }
 
         /// <summary>
@@ -623,11 +651,7 @@ namespace KeywordDriven.ActionKeywords
             {
                 By by = Locators.GetLocator(obj);
 
-                if (Waits.WaitUntilVisibleByDriver(Drivers.driver, by))
-                {
-                    DriverScript.outcome = (int)Outcome.Pass;
-                }
-                else if (Waits.WaitUntilVisibleByJs(Drivers.driver, by))
+                if (Waits.WaitUntilVisibleByJs(Drivers.driver, by))
                 {
                     DriverScript.outcome = (int)Outcome.Pass;
                 }
@@ -671,11 +695,7 @@ namespace KeywordDriven.ActionKeywords
             {
                 By by = Locators.GetLocator(obj);
 
-                if (Waits.WaitUntilNotVisibleByDriver(Drivers.driver, by))
-                {
-                    DriverScript.outcome = (int) Outcome.Pass;
-                }
-                else if(Waits.WaitUntilNotVisibleByJs(Drivers.driver, by))
+                if (Waits.WaitUntilNotVisibleByJs(Drivers.driver, by))
                 {
                     DriverScript.outcome = (int) Outcome.Pass;
                 }
@@ -893,6 +913,46 @@ namespace KeywordDriven.ActionKeywords
                 DriverScript.outcome = (int) Outcome.Error;
             }
         }
+
+        public static void WaitUntilPageLoaded(String obj, String data)
+        {
+            Log.Info($"{MethodBase.GetCurrentMethod().Name}");
+            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name}");
+            try
+            {
+                if (Waits.WaitUntilPageLoaded(Drivers.driver))
+                {
+                    DriverScript.outcome = (int)Outcome.Pass;
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                DriverScript.outcome = (int)Outcome.Error;
+            }
+        }
+
+        public static void WaitUntilTextContains(String obj, String data)
+        {
+            Log.Info($"{MethodBase.GetCurrentMethod().Name} \"{data}\"");
+            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} \"{data}\"");
+            try
+            {
+                By by = Locators.GetLocator(obj);
+
+                if (Waits.WaitUntilTextContains(Drivers.driver, by, data))
+                {
+                    DriverScript.outcome = (int)Outcome.Pass;
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                DriverScript.outcome = (int)Outcome.Error;
+            }
+        }
         
         public static void WaitSeconds(String obj, String data)
         {
@@ -908,7 +968,7 @@ namespace KeywordDriven.ActionKeywords
             catch (Exception e)
             {
                 Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
                 DriverScript.outcome = (int) Outcome.Error;
             }
         }

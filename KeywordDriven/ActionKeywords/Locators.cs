@@ -1,19 +1,14 @@
-﻿using AngleSharp.Dom;
-using AventStack.ExtentReports.Gherkin.Model;
-using KeywordDriven.Config;
+﻿using KeywordDriven.Config;
 using KeywordDriven.Execution;
 using KeywordDriven.Utils;
 using OpenQA.Selenium;
-using OpenQA.Selenium.BiDi.Modules.BrowsingContext;
 using OpenQA.Selenium.Interactions;
 using OpenQA.Selenium.Support.UI;
-using SeleniumExtras.WaitHelpers;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Xml.Linq;
 
 namespace KeywordDriven.ActionKeywords
 {
@@ -26,24 +21,51 @@ namespace KeywordDriven.ActionKeywords
         /// <exception cref="Exception"></exception>
         internal static By GetLocator(string obj)
         {
-            string[] pageObject = obj.Split('_');
+            if (string.IsNullOrWhiteSpace(obj))
+                throw new ArgumentException("Page object name cannot be null or empty.", nameof(obj));
 
-            string locatortype = pageObject[1];
+            string[] pageObject = obj.Split('_', 3);
+            if (pageObject.Length < 2 || string.IsNullOrWhiteSpace(pageObject[1]))
+                throw new ArgumentException(
+                    $"Page object '{obj}' must include a locator type after the first underscore.",
+                    nameof(obj));
+
+            string locatorType = pageObject[1].Trim();
             string locatorvalue = ExcelManager.GetKeyValue(obj, ExcelSetting.Col_Locators_PageObject, ExcelSetting.Sheet_Locators);
-            
-            By locator = locatortype.Trim().ToLower() switch
+
+            if (string.IsNullOrWhiteSpace(locatorvalue))
+                throw new InvalidOperationException($"No locator value is configured for page object '{obj}'.");
+
+            return locatorType.ToLowerInvariant() switch
             {
                 "xpath" => By.XPath(locatorvalue),
                 "id" => By.Id(locatorvalue),
-                "csslocator" => By.CssSelector(locatorvalue),
-                "classname" => By.ClassName(locatorvalue),
-                "tagname" => By.TagName(locatorvalue),
+                "css" or "cssselector" or "csslocator" => By.CssSelector(locatorvalue),
+                "class" or "classname" => By.ClassName(locatorvalue),
+                "tag" or "tagname" => By.TagName(locatorvalue),
                 "linktext" => By.LinkText(locatorvalue),
                 "name" => By.Name(locatorvalue),
                 "partiallinktext" => By.PartialLinkText(locatorvalue),
-                _ => throw new Exception($"Unsupported locator type:{locatortype.Trim().ToLower()}, Valid types: id, name, xpath, css, classname, tagname, linktext, partiallinktext"),
+                "testid" or "datatestid" => By.XPath($"//*[@data-testid={ToXPathLiteral(locatorvalue)}]"),
+                "arialabel" => By.XPath($"//*[@aria-label={ToXPathLiteral(locatorvalue)}]"),
+                "role" => By.XPath($"//*[@role={ToXPathLiteral(locatorvalue)}]"),
+                "text" => By.XPath($"//*[normalize-space(.)={ToXPathLiteral(locatorvalue)}]"),
+                "partialtext" => By.XPath($"//*[contains(normalize-space(.), {ToXPathLiteral(locatorvalue)})]"),
+                _ => throw new ArgumentException(
+                    $"Unsupported locator type '{locatorType}'. Valid types: id, name, xpath, css, classname, tagname, linktext, partiallinktext, testid, arialabel, role, text, partialtext.",
+                    nameof(obj)),
             };
-            return locator;
+        }
+
+        private static string ToXPathLiteral(string value)
+        {
+            if (!value.Contains('\''))
+                return $"'{value}'";
+            if (!value.Contains('"'))
+                return $"\"{value}\"";
+
+            string[] parts = value.Split('\'');
+            return $"concat({string.Join(", \"'\", ", parts.Select(part => $"'{part}'"))})";
         }
 
         /// <summary>
@@ -76,7 +98,7 @@ namespace KeywordDriven.ActionKeywords
             try
             {
                 var js = (IJavaScriptExecutor)driver;
-                js.ExecuteScript("arguments[0].click();", Drivers.driver.FindElement(locator));
+                js.ExecuteScript("arguments[0].click();", driver.FindElement(locator));
                 return true;
             }
             catch (Exception e)
@@ -94,18 +116,10 @@ namespace KeywordDriven.ActionKeywords
         /// <param name="by"></param>
         internal static void ClickByActions(IWebDriver driver, By locator)
         {
-            try
-            {
-                new Actions(driver)
-                    .MoveToElement(driver.FindElement(locator))
-                    .Click()
-                    .Perform();
-            }
-            catch (Exception e)
-            {
-                Log.Info($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-            }
+            new Actions(driver)
+                .MoveToElement(driver.FindElement(locator))
+                .Click()
+                .Perform();
         }
 
         /// <summary>
@@ -114,18 +128,9 @@ namespace KeywordDriven.ActionKeywords
         /// </summary>        
         internal static void DoubleClick(IWebDriver driver, By locator)
         {
-            try
-            {
-                new Actions(driver)
-                    .DoubleClick(driver.FindElement(locator))
-                    .Perform();
-
-            }
-            catch (Exception e)
-            {
-                Log.Info($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-            }
+            new Actions(driver)
+                .DoubleClick(driver.FindElement(locator))
+                .Perform();
         }
 
         /// <summary>
@@ -134,17 +139,9 @@ namespace KeywordDriven.ActionKeywords
         /// </summary>
         internal static void RightClick(IWebDriver driver, By locator)
         {
-            try
-            {
-                new Actions(driver)
-                    .ContextClick(driver.FindElement(locator))
-                    .Perform();
-            }
-            catch (Exception e)
-            {
-                Log.Info($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-            }
+            new Actions(driver)
+                .ContextClick(driver.FindElement(locator))
+                .Perform();
         }
 
         /// <summary>
@@ -176,12 +173,27 @@ namespace KeywordDriven.ActionKeywords
         /// <param name="locator"></param>
         /// <param name="data"></param>
         /// <returns></returns>
-        internal static bool InputByJavascript(IWebDriver driver, By locator, string data)
+        internal static bool InputByJavascript(IWebDriver driver, By locator, string data, bool append = false)
         {
             try
             {
                 IJavaScriptExecutor jse = (IJavaScriptExecutor)driver;
-                jse.ExecuteScript("arguments[0].value='" + data + "';", driver.FindElement(locator));
+                jse.ExecuteScript(
+                    "const element = arguments[0];" +
+                    "const text = arguments[1];" +
+                    "const append = arguments[2];" +
+                    "if ('value' in element) {" +
+                    "const value = append ? element.value + text : text;" +
+                    "const setter = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(element), 'value')?.set;" +
+                    "if (setter) setter.call(element, value); else element.value = value;" +
+                    "} else if (element.isContentEditable) {" +
+                    "element.textContent = append ? element.textContent + text : text;" +
+                    "} else { throw new Error('Element is not an editable text control.'); }" +
+                    "element.dispatchEvent(new Event('input', { bubbles: true }));" +
+                    "element.dispatchEvent(new Event('change', { bubbles: true }));",
+                    driver.FindElement(locator),
+                    data,
+                    append);
                 return true;
             }
             catch (Exception e)
@@ -201,15 +213,7 @@ namespace KeywordDriven.ActionKeywords
         /// <returns></returns>
         internal static void SelectByText(IWebDriver driver, By locator, string text)
         {
-            try
-            {
-                new SelectElement(driver.FindElement(locator)).SelectByText(text);
-            }
-            catch (Exception e)
-            {
-                Log.Info($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-            }
+            new SelectElement(driver.FindElement(locator)).SelectByText(text);
         }
 
         /// <summary>
@@ -221,15 +225,7 @@ namespace KeywordDriven.ActionKeywords
         /// <returns></returns>
         internal static void SelectByValue(IWebDriver driver, By locator, string value)
         {
-            try
-            {
-                new SelectElement(driver.FindElement(locator)).SelectByValue(value);
-            }
-            catch (Exception e)
-            {
-                Log.Info($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-            }
+            new SelectElement(driver.FindElement(locator)).SelectByValue(value);
         }
 
         /// <summary>
@@ -238,29 +234,7 @@ namespace KeywordDriven.ActionKeywords
         /// </summary>
         internal static void SelectByIndex(IWebDriver driver, By locator, int index)
         {
-            try
-            {
-                var select = new SelectElement(driver.FindElement(locator));
-                select.SelectByIndex(index);
-            }
-            catch (Exception e)
-            {
-                Log.Info($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-            }
-           
-        }
-
-        /// <summary>
-        /// Tries to convert string to int without throwing.
-        /// Returns a default value if conversion fails.
-        /// </summary>
-        internal static int ToIntOrDefault(string data, int defaultValue = 0)
-        {
-            if (string.IsNullOrWhiteSpace(data))
-                return defaultValue;
-
-            return int.TryParse(data.Trim(), out int result) ? result : defaultValue;
+            new SelectElement(driver.FindElement(locator)).SelectByIndex(index);
         }
 
         /// <summary>
@@ -269,17 +243,8 @@ namespace KeywordDriven.ActionKeywords
         /// <param name="driver"></param>
         /// <param name="locator"></param>
         internal static void SelectFirstOption(IWebDriver driver, By locator)
-        {         
-            try
-            {
-                var select = new SelectElement(driver.FindElement(locator));
-                select.SelectByIndex(0);
-            }
-            catch (Exception e)
-            {
-                Log.Info($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-            }
+        {
+            new SelectElement(driver.FindElement(locator)).SelectByIndex(0);
         }
 
         /// <summary>
@@ -289,16 +254,8 @@ namespace KeywordDriven.ActionKeywords
         /// <param name="locator"></param>
         internal static void SelectLastOption(IWebDriver driver, By locator)
         {
-            try
-            {
-                var select = new SelectElement(driver.FindElement(locator));
-                select.SelectByIndex(select.Options.Count - 1);
-            }
-            catch (Exception e)
-            {
-                Log.Info($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-            }
+            var select = new SelectElement(driver.FindElement(locator));
+            select.SelectByIndex(select.Options.Count - 1);
         }
 
         /// <summary>
@@ -308,19 +265,14 @@ namespace KeywordDriven.ActionKeywords
         /// <param name="locator"></param>
         /// <param name="texts"></param>
         internal static void SelectMultipleByText(IWebDriver driver, By locator, IEnumerable<string> texts)
-        {           
-            try
-            {
-                var select = new SelectElement(driver.FindElement(locator));
+        {
+            ArgumentNullException.ThrowIfNull(texts);
+            var select = new SelectElement(driver.FindElement(locator));
+            if (!select.IsMultiple)
+                throw new InvalidOperationException("Multiple options can only be selected on a multi-select element.");
 
-                foreach (var text in texts)
-                    select.SelectByText(text);
-            }
-            catch (Exception e)
-            {
-                Log.Info($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-            }
+            foreach (var text in texts)
+                select.SelectByText(text);
         }
 
         /// <summary>
@@ -330,16 +282,7 @@ namespace KeywordDriven.ActionKeywords
         /// <param name="locator"></param>
         internal static void DeselectAll(IWebDriver driver, By locator)
         {
-            try
-            {
-                var select = new SelectElement(driver.FindElement(locator));
-                select.DeselectAll();
-            }
-            catch (Exception e)
-            {
-                Log.Info($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-            }
+            new SelectElement(driver.FindElement(locator)).DeselectAll();
         }
 
         /// <summary>
@@ -348,19 +291,10 @@ namespace KeywordDriven.ActionKeywords
         /// <param name="driver"></param>
         /// <param name="locator"></param>
         internal static void CheckCheckbox(IWebDriver driver, By locator)
-        {            
-            try
-            {
-                var element = driver.FindElement(locator);
-
-                if (!element.Selected)
-                    element.Click();
-            }
-            catch (Exception e)
-            {
-                Log.Info($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-            }
+        {
+            var element = driver.FindElement(locator);
+            if (!GetCheckableState(element, "checkbox"))
+                element.Click();
         }
 
         /// <summary>
@@ -370,18 +304,9 @@ namespace KeywordDriven.ActionKeywords
         /// <param name="locator"></param>
         internal static void UnCheckCheckbox(IWebDriver driver, By locator)
         {
-            try
-            {
-                var element = driver.FindElement(locator);
-
-                if (element.Selected)
-                    element.Click();
-            }
-            catch (Exception e)
-            {
-                Log.Info($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-            }
+            var element = driver.FindElement(locator);
+            if (GetCheckableState(element, "checkbox"))
+                element.Click();
         }
 
         /// <summary>
@@ -391,18 +316,40 @@ namespace KeywordDriven.ActionKeywords
         /// <param name="locator"></param>
         internal static void SelectRadioButton(IWebDriver driver, By locator)
         {
-            try
-            {
-                var element = driver.FindElement(locator);
+            var element = driver.FindElement(locator);
+            if (!GetCheckableState(element, "radio"))
+                element.Click();
+        }
 
-                if (!element.Selected)
-                    element.Click();
-            }
-            catch (Exception e)
+        private static bool IsRadioButton(IWebElement element)
+        {
+            return (element.TagName.Equals("input", StringComparison.OrdinalIgnoreCase)
+                    && string.Equals(element.GetAttribute("type"), "radio", StringComparison.OrdinalIgnoreCase))
+                || string.Equals(element.GetAttribute("role"), "radio", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool GetCheckableState(IWebElement element, string expectedType)
+        {
+            bool isNativeInput = element.TagName.Equals("input", StringComparison.OrdinalIgnoreCase)
+                && string.Equals(element.GetAttribute("type"), expectedType, StringComparison.OrdinalIgnoreCase);
+            bool isAriaControl = string.Equals(
+                element.GetAttribute("role"),
+                expectedType,
+                StringComparison.OrdinalIgnoreCase);
+
+            if (!isNativeInput && !isAriaControl)
+                throw new InvalidOperationException($"Element is not a {expectedType} control.");
+
+            if (isNativeInput)
+                return element.Selected;
+
+            return element.GetAttribute("aria-checked") switch
             {
-                Log.Info($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-            }
+                "true" => true,
+                "false" or "mixed" => false,
+                _ => throw new InvalidOperationException(
+                    $"ARIA {expectedType} control must have aria-checked='true' or 'false'.")
+            };
         }
 
         /// <summary>
@@ -414,12 +361,12 @@ namespace KeywordDriven.ActionKeywords
         /// <exception cref="NoSuchElementException"></exception>
         internal static void SelectRadioButtonByText(IWebDriver driver, By groupLocator, string labelText)
         {
-            var radios = driver.FindElements(groupLocator);
+            var radios = driver.FindElements(groupLocator).Where(IsRadioButton).ToList();
 
-            // find radio whose associated label or own text matches
             var match = radios.FirstOrDefault(r =>
-                r.GetAttribute("value")?.Equals(labelText, StringComparison.OrdinalIgnoreCase) == true ||
-                r.Text.Trim().Equals(labelText, StringComparison.OrdinalIgnoreCase)
+                string.Equals(r.GetAttribute("value"), labelText, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(r.Text.Trim(), labelText, StringComparison.OrdinalIgnoreCase)
+                || GetRadioLabelText(driver, r).Equals(labelText, StringComparison.OrdinalIgnoreCase)
             );
 
             if (match == null)
@@ -428,8 +375,23 @@ namespace KeywordDriven.ActionKeywords
                     $"Available: [{string.Join(", ", radios.Select(r => r.GetAttribute("value")))}]"
                 );
 
-            if (!match.Selected)
+            if (!GetCheckableState(match, "radio"))
                 match.Click();
+        }
+
+        private static string GetRadioLabelText(IWebDriver driver, IWebElement radio)
+        {
+            string id = radio.GetAttribute("id");
+            if (!string.IsNullOrEmpty(id))
+            {
+                string labelText = driver.FindElements(By.XPath($"//label[@for={ToXPathLiteral(id)}]"))
+                    .FirstOrDefault()?.Text;
+                if (!string.IsNullOrWhiteSpace(labelText))
+                    return labelText.Trim();
+            }
+
+            return radio.FindElements(By.XPath("ancestor::label[1]"))
+                .FirstOrDefault()?.Text.Trim() ?? string.Empty;
         }
 
         /// <summary>
@@ -441,7 +403,7 @@ namespace KeywordDriven.ActionKeywords
         /// <exception cref="NoSuchElementException"></exception>
         internal static void SelectRadioButtonByValue(IWebDriver driver, By groupLocator, string value)
         {
-            var radios = driver.FindElements(groupLocator);
+            var radios = driver.FindElements(groupLocator).Where(IsRadioButton).ToList();
 
             var match = radios.FirstOrDefault(r =>
                 r.GetAttribute("value")?.Equals(value, StringComparison.OrdinalIgnoreCase) == true
@@ -453,7 +415,7 @@ namespace KeywordDriven.ActionKeywords
                     $"Available values: [{string.Join(", ", radios.Select(r => r.GetAttribute("value")))}]"
                 );
 
-            if (!match.Selected)
+            if (!GetCheckableState(match, "radio"))
                 match.Click();
         }
 
@@ -464,18 +426,20 @@ namespace KeywordDriven.ActionKeywords
         /// <param name="groupLocator"></param>
         /// <param name="index"></param>
         /// <exception cref="ArgumentOutOfRangeException"></exception>
-        internal static void SelectRadioButtonByIndex(IWebDriver driver, By groupLocator,int index)
+        internal static void SelectRadioButtonByIndex(IWebDriver driver, By groupLocator, int index)
         {
-            var radios = driver.FindElements(groupLocator);
+            var radios = driver.FindElements(groupLocator).Where(IsRadioButton).ToList();
 
             if (index < 0 || index >= radios.Count)
                 throw new ArgumentOutOfRangeException(
-                    $"Index {index} is out of range. Group has {radios.Count} radio buttons (0 to {radios.Count - 1})."
+                    nameof(index),
+                    index,
+                    $"Group has {radios.Count} radio buttons (valid indexes: 0 to {radios.Count - 1})."
                 );
 
             var target = radios.ElementAt(index);
 
-            if (!target.Selected)
+            if (!GetCheckableState(target, "radio"))
                 target.Click();
         }
 
@@ -511,7 +475,17 @@ namespace KeywordDriven.ActionKeywords
             try
             {
                 IJavaScriptExecutor jse = (IJavaScriptExecutor)driver;
-                jse.ExecuteScript("arguments[0].value = '';", driver.FindElement(locator));
+                jse.ExecuteScript(
+                    "const element = arguments[0];" +
+                    "if ('value' in element) {" +
+                    "const setter = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(element), 'value')?.set;" +
+                    "if (setter) setter.call(element, ''); else element.value = '';" +
+                    "} else if (element.isContentEditable) {" +
+                    "element.textContent = '';" +
+                    "} else { throw new Error('Element is not an editable text control.'); }" +
+                    "element.dispatchEvent(new Event('input', { bubbles: true }));" +
+                    "element.dispatchEvent(new Event('change', { bubbles: true }));",
+                    driver.FindElement(locator));
                 return true;
             }
             catch (Exception e)
@@ -529,29 +503,35 @@ namespace KeywordDriven.ActionKeywords
         /// <param name="locator"></param>
         /// <param name="key"></param>
         /// <exception cref="Exception"></exception>
-        internal static void PressKey(IWebDriver driver,By locator, string key)
+        internal static void PressKey(IWebDriver driver, By locator, string key)
         {
-            try
-            {
-                string keyToSend = key.Trim().ToLower() switch
-                {
-                    "enter" => Keys.Enter,
-                    "tab" => Keys.Tab,
-                    "escape" => Keys.Escape,
-                    "space" => Keys.Space,
-                    "backspace" => Keys.Backspace,
-                    "delete" => Keys.Delete,
-                    "arrowup" => Keys.ArrowUp,
-                    "arrowdown" => Keys.ArrowDown,
-                    _ => key
-                };
+            if (string.IsNullOrWhiteSpace(key))
+                throw new ArgumentException("Key cannot be null or empty.", nameof(key));
 
-                driver.FindElement(locator).SendKeys(keyToSend);
-            }
-            catch (Exception ex)
+            string keyName = key.Trim().ToLowerInvariant();
+            string keyToSend = keyName switch
             {
-                throw new Exception($"PressKey [{locator}]: {ex.Message}");
-            }
+                "enter" => Keys.Enter,
+                "tab" => Keys.Tab,
+                "escape" => Keys.Escape,
+                "space" => Keys.Space,
+                "backspace" => Keys.Backspace,
+                "delete" => Keys.Delete,
+                "arrowup" => Keys.ArrowUp,
+                "arrowdown" => Keys.ArrowDown,
+                "arrowleft" => Keys.ArrowLeft,
+                "arrowright" => Keys.ArrowRight,
+                "home" => Keys.Home,
+                "end" => Keys.End,
+                "pageup" => Keys.PageUp,
+                "pagedown" => Keys.PageDown,
+                "control" or "ctrl" => Keys.Control,
+                "shift" => Keys.Shift,
+                "alt" => Keys.Alt,
+                _ => key
+            };
+
+            driver.FindElement(locator).SendKeys(keyToSend);
         }
 
         /// <summary>
@@ -645,7 +625,7 @@ namespace KeywordDriven.ActionKeywords
         /// <param name="locator"></param>
         /// <param name="filePaths"></param>
         /// <exception cref="Exception"></exception>
-        internal static void UploadMultipleFiles(IWebDriver driver,By locator, string[] filePaths)
+        internal static void UploadMultipleFiles(IWebDriver driver, By locator, string[] filePaths)
         {
             try
             {
@@ -696,7 +676,25 @@ namespace KeywordDriven.ActionKeywords
                     $"UploadMultipleFiles | Locator: {locator} | Error: {ex.Message}");
             }
         }
-        
+
+        internal static void ExecuteLocatorKeyword(string keyword, string obj, string data, Action<By, string> operation)
+        {
+            Log.Info($"{keyword} \"{data}\" on \"{obj}\"");
+            ExtentReporter.NodeInfo($"{keyword} \"{data}\" on \"{obj}\"");
+
+            try
+            {
+                operation(Locators.GetLocator(obj), data);
+                DriverScript.outcome = (int)Outcome.Pass;
+            }
+            catch (Exception e)
+            {
+                Log.Error($"{keyword} | Exception: {e.Message}");
+                ExtentReporter.NodeError($"{keyword} | Exception: {e.Message}");
+                DriverScript.outcome = (int)Outcome.Error;
+            }
+        }
+
     }
     
     public partial class Keywords
@@ -704,305 +702,170 @@ namespace KeywordDriven.ActionKeywords
 
         #region Keywords methods
 
-        public static void Click(String obj, String data)
-        {
-            Log.Info($"{MethodBase.GetCurrentMethod().Name} \"{obj}\"");
-            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} \"{obj}\"");
-
-            try
+        public static void Click(String obj, String data) =>
+            Locators.ExecuteLocatorKeyword(nameof(Click), obj, data, (locator, _) =>
             {
-                By locator = Locators.GetLocator(obj);
-
                 Waits.WaitUntilClickable(Drivers.driver, locator);
+                IWebElement element = Drivers.driver.FindElement(locator);
+                ((IJavaScriptExecutor)Drivers.driver).ExecuteScript(
+                    "arguments[0].scrollIntoView({block: 'center'});",
+                    element);
 
-                ((IJavaScriptExecutor)Drivers.driver).ExecuteScript("arguments[0].scrollIntoView({block: 'center'});", locator);
+                if (!Locators.ClickByDriver(Drivers.driver, locator)
+                    && !Locators.ClickByJavascript(Drivers.driver, locator))
+                    throw new InvalidOperationException($"Could not click page object '{obj}'.");
+            });
 
-                if (Locators.ClickByDriver(Drivers.driver,locator))
-                {
-                    DriverScript.outcome = (int)Outcome.Pass;
-                }
-                else if (Locators.ClickByJavascript(Drivers.driver,locator))
-                {
-                    DriverScript.outcome = (int) Outcome.Pass;
-                }
-                else
-                {
-                    DriverScript.outcome = (int)Outcome.Error;
-                }
-                
-            }
-            catch (Exception e)
+        public static void TypeText(String obj, String data) =>
+            Locators.ExecuteLocatorKeyword(nameof(TypeText), obj, data, (locator, text) =>
             {
-                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                DriverScript.outcome = (int) Outcome.Error;
-            }
-        }
+                Waits.WaitUntilEditable(Drivers.driver, locator);
+                if (!Locators.InputByDriver(Drivers.driver, locator, text)
+                    && !Locators.InputByJavascript(Drivers.driver, locator, text))
+                    throw new InvalidOperationException($"Could not type text into '{obj}'.");
+            });
 
-        public static void TypeText(String obj, String data)
-        {
-            Log.Info($"{MethodBase.GetCurrentMethod().Name} \"{data}\" to \"{obj}\"");
-            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} \"{data}\" to \"{obj}\"");
-            try
+        public static void AppendText(String obj, String data) =>
+            Locators.ExecuteLocatorKeyword(nameof(AppendText), obj, data, (locator, text) =>
             {
-                By locator = Locators.GetLocator(obj);
+                Waits.WaitUntilEditable(Drivers.driver, locator);
+                if (!Locators.InputByDriver(Drivers.driver, locator, text)
+                    && !Locators.InputByJavascript(Drivers.driver, locator, text, append: true))
+                    throw new InvalidOperationException($"Could not append text to '{obj}'.");
+            });
 
-                Waits.WaitUntilClickable(Drivers.driver, locator);
-
-                if (!Locators.InputByDriver(Drivers.driver, locator, data))
-                {
-                    if (!Locators.InputByJavascript(Drivers.driver, locator, data))
-                    {
-                        DriverScript.outcome = (int) Outcome.Error;
-                    }
-                    else
-                    {
-                        DriverScript.outcome = (int) Outcome.Pass;
-                    }
-                }
-                else
-                {
-                    DriverScript.outcome = (int) Outcome.Pass;
-                }
-                
-            }
-            catch (Exception e)
+        public static void ClearText(String obj, String data) =>
+            Locators.ExecuteLocatorKeyword(nameof(ClearText), obj, data, (locator, _) =>
             {
-                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                DriverScript.outcome = (int) Outcome.Error;
-            }
-        }
-
-        public static void AppendText(String obj, String data)
-        { }
+                Waits.WaitUntilEditable(Drivers.driver, locator);
+                if (!Locators.ClearByDriver(Drivers.driver, locator)
+                    && !Locators.ClearByJavascript(Drivers.driver, locator))
+                    throw new InvalidOperationException($"Could not clear text from '{obj}'.");
+            });
         
-        public static void ClearText(String obj, String data)
-        {
-            Log.Info($"{MethodBase.GetCurrentMethod().Name} \"{obj}\"");
-            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} \"{obj}\"");
-
-            try
+        public static void SelectByText(String obj, String data) =>
+            Locators.ExecuteLocatorKeyword(nameof(SelectByText), obj, data, (locator, text) =>
             {
-                By locator = Locators.GetLocator(obj);
+                Waits.WaitUntilExists(Drivers.driver, locator);
+                Locators.SelectByText(Drivers.driver, locator, text);
+            });
 
+        public static void SelectByValue(String obj, String data) =>
+            Locators.ExecuteLocatorKeyword(nameof(SelectByValue), obj, data, (locator, value) =>
+            {
+                Waits.WaitUntilExists(Drivers.driver, locator);
+                Locators.SelectByValue(Drivers.driver, locator, value);
+            });
+
+        public static void SelectByIndex(String obj, String data) =>
+            Locators.ExecuteLocatorKeyword(nameof(SelectByIndex), obj, data, (locator, value) =>
+            {
+                if (!int.TryParse(value, out int index) || index < 0)
+                    throw new ArgumentException("SelectByIndex requires a non-negative integer index.", nameof(data));
+
+                Waits.WaitUntilExists(Drivers.driver, locator);
+                Locators.SelectByIndex(Drivers.driver, locator, index);
+            });
+
+        public static void CheckCheckbox(String obj, String data) =>
+            Locators.ExecuteLocatorKeyword(nameof(CheckCheckbox), obj, data, (locator, _) =>
+            {
                 Waits.WaitUntilClickable(Drivers.driver, locator);
-                WaitSeconds("", "2");
-
-                if (!Locators.ClearByDriver(Drivers.driver, locator))
-                {
-                    if (!Locators.ClearByJavascript(Drivers.driver, locator))
-                    {
-                        DriverScript.outcome = (int)Outcome.Error;
-                    }
-                    else
-                    {
-                        DriverScript.outcome = (int)Outcome.Pass;
-                    }
-                }
-                else
-                {
-                    DriverScript.outcome = (int)Outcome.Pass;
-                }
-
-            }
-            catch (Exception e)
-            {
-                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                DriverScript.outcome = (int)Outcome.Error;
-            }
-        }
-        
-        public static void SelectByText(String obj, String data)
-        {
-            Log.Info($"{MethodBase.GetCurrentMethod().Name} from \"{obj}\"");
-            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} from \"{obj}\"");
-
-            try
-            {
-                By locator = Locators.GetLocator(obj);
-
-                Waits.WaitUntilExists(Drivers.driver, locator);
-
-                Locators.SelectByText(Drivers.driver, locator, data);
-                
-                DriverScript.outcome = (int) Outcome.Pass;
-                    
-            }
-            catch (Exception e)
-            {
-                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                DriverScript.outcome = (int) Outcome.Error;
-            }
-        }
-
-        public static void SelectByValue(String obj, String data)
-        {
-            Log.Info($"{MethodBase.GetCurrentMethod().Name} from \"{obj}\"");
-            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} from \"{obj}\"");
-
-            try
-            {
-                By locator = Locators.GetLocator(obj);
-
-                Waits.WaitUntilExists(Drivers.driver, locator);
-
-                Locators.SelectByValue(Drivers.driver, locator, data);
-
-                DriverScript.outcome = (int)Outcome.Pass;
-
-            }
-            catch (Exception e)
-            {
-                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                DriverScript.outcome = (int)Outcome.Error;
-            }
-        }
-
-        public static void SelectByIndex(String obj, String data)
-        {
-            Log.Info($"{MethodBase.GetCurrentMethod().Name} {data} from \"{obj}\"");
-            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} {data} from \"{obj}\"");
-
-            try
-            {
-                By locator = Locators.GetLocator(obj);
-
-                Waits.WaitUntilExists(Drivers.driver, locator);
-
-                Locators.SelectByIndex(Drivers.driver, locator, Locators.ToIntOrDefault(data));
-
-                DriverScript.outcome = (int)Outcome.Pass;
-
-            }
-            catch (Exception e)
-            {
-                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                DriverScript.outcome = (int)Outcome.Error;
-            }
-        }
-
-        public static void CheckCheckbox(String obj, String data)
-        {
-            Log.Info($"{MethodBase.GetCurrentMethod().Name} {data} from \"{obj}\"");
-            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} {data} from \"{obj}\"");
-
-            try
-            {
-                By locator = Locators.GetLocator(obj);
-
-                Waits.WaitUntilExists(Drivers.driver, locator);
-
                 Locators.CheckCheckbox(Drivers.driver, locator);
+            });
 
-                DriverScript.outcome = (int)Outcome.Pass;
-
-            }
-            catch (Exception e)
+        public static void SelectRadioButton(String obj, String data) =>
+            Locators.ExecuteLocatorKeyword(nameof(SelectRadioButton), obj, data, (locator, _) =>
             {
-                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                DriverScript.outcome = (int)Outcome.Error;
-            }
-        }
-
-        public static void SelectRadioButton(String obj, String data)
-        {
-            Log.Info($"{MethodBase.GetCurrentMethod().Name} {data} from \"{obj}\"");
-            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} {data} from \"{obj}\"");
-
-            try
-            {
-                By locator = Locators.GetLocator(obj);
-
-                Waits.WaitUntilExists(Drivers.driver, locator);
-
+                Waits.WaitUntilClickable(Drivers.driver, locator);
                 Locators.SelectRadioButton(Drivers.driver, locator);
+            });
 
-                DriverScript.outcome = (int)Outcome.Pass;
+        public static void SelectRadioButtonByText(String obj, String data) =>
+            Locators.ExecuteLocatorKeyword(nameof(SelectRadioButtonByText), obj, data, (locator, text) =>
+                Locators.SelectRadioButtonByText(Drivers.driver, locator, text));
 
-            }
-            catch (Exception e)
+        public static void SelectRadioButtonByValue(String obj, String data) =>
+            Locators.ExecuteLocatorKeyword(nameof(SelectRadioButtonByValue), obj, data, (locator, value) =>
+                Locators.SelectRadioButtonByValue(Drivers.driver, locator, value));
+
+        public static void SelectRadioButtonByIndex(String obj, String data) =>
+            Locators.ExecuteLocatorKeyword(nameof(SelectRadioButtonByIndex), obj, data, (locator, value) =>
             {
-                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                DriverScript.outcome = (int)Outcome.Error;
-            }
-        }
+                if (!int.TryParse(value, out int index) || index < 0)
+                    throw new ArgumentException("SelectRadioButtonByIndex requires a non-negative integer index.", nameof(data));
 
-        public static void PressKey(String obj, String data)
-        {
-            Log.Info($"{MethodBase.GetCurrentMethod().Name} \"{data}\" in \"{obj}\"");
-            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} \"{data}\" in \"{obj}\"");
-            try
+                Locators.SelectRadioButtonByIndex(Drivers.driver, locator, index);
+            });
+
+        public static void UnCheckCheckbox(String obj, String data) =>
+            Locators.ExecuteLocatorKeyword(nameof(UnCheckCheckbox), obj, data, (locator, _) =>
+                Locators.UnCheckCheckbox(Drivers.driver, locator));
+
+        public static void UncheckCheckbox(String obj, String data) =>
+            Locators.ExecuteLocatorKeyword(nameof(UncheckCheckbox), obj, data, (locator, _) =>
+                Locators.UnCheckCheckbox(Drivers.driver, locator));
+
+        public static void SelectFirstOption(String obj, String data) =>
+            Locators.ExecuteLocatorKeyword(nameof(SelectFirstOption), obj, data, (locator, _) =>
+                Locators.SelectFirstOption(Drivers.driver, locator));
+
+        public static void SelectLastOption(String obj, String data) =>
+            Locators.ExecuteLocatorKeyword(nameof(SelectLastOption), obj, data, (locator, _) =>
+                Locators.SelectLastOption(Drivers.driver, locator));
+
+        public static void SelectMultipleByText(String obj, String data) =>
+            Locators.ExecuteLocatorKeyword(nameof(SelectMultipleByText), obj, data, (locator, optionData) =>
             {
-                By locator = Locators.GetLocator(obj);
+                string[] optionTexts = optionData.Split(
+                    '|',
+                    StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                if (optionTexts.Length == 0)
+                    throw new ArgumentException("SelectMultipleByText requires pipe-separated option texts.", nameof(data));
 
-                Locators.PressKey(Drivers.driver, locator,data);
+                Locators.SelectMultipleByText(Drivers.driver, locator, optionTexts);
+            });
 
-                DriverScript.outcome = (int)Outcome.Pass;
+        public static void DeselectAll(String obj, String data) =>
+            Locators.ExecuteLocatorKeyword(nameof(DeselectAll), obj, data, (locator, _) =>
+                Locators.DeselectAll(Drivers.driver, locator));
 
+        public static void ClickByActions(String obj, String data) =>
+            Locators.ExecuteLocatorKeyword(nameof(ClickByActions), obj, data, (locator, _) =>
+                Locators.ClickByActions(Drivers.driver, locator));
 
-            }
-            catch (Exception e)
+        public static void DoubleClick(String obj, String data) =>
+            Locators.ExecuteLocatorKeyword(nameof(DoubleClick), obj, data, (locator, _) =>
+                Locators.DoubleClick(Drivers.driver, locator));
+
+        public static void RightClick(String obj, String data) =>
+            Locators.ExecuteLocatorKeyword(nameof(RightClick), obj, data, (locator, _) =>
+                Locators.RightClick(Drivers.driver, locator));
+
+        public static void PressKey(String obj, String data) =>
+            Locators.ExecuteLocatorKeyword(nameof(PressKey), obj, data, (locator, key) =>
+                Locators.PressKey(Drivers.driver, locator, key));
+
+        public static void UploadFile(String obj, String data) =>
+            Locators.ExecuteLocatorKeyword(nameof(UploadFile), obj, data, (locator, filePath) =>
             {
-                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                DriverScript.outcome = (int) Outcome.Error;
-            }
-        }
+                Waits.WaitUntilExists(Drivers.driver, locator);
+                Locators.UploadFile(Drivers.driver, locator, filePath);
+            });
 
-        public static void UploadFile(String obj, String data)
-        {
-            Log.Info($"{MethodBase.GetCurrentMethod().Name} \"{data}\"");
-            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} \"{data}\"");
-            try
+        public static void UploadMultipleFiles(String obj, String data) =>
+            Locators.ExecuteLocatorKeyword(nameof(UploadMultipleFiles), obj, data, (locator, paths) =>
             {
-                By locator = Locators.GetLocator(obj);
+                char separator = paths.Contains('|') ? '|' : ',';
+                string[] filePaths = paths.Split(
+                    separator,
+                    StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                if (filePaths.Length == 0)
+                    throw new ArgumentException("UploadMultipleFiles requires pipe- or comma-separated file paths.", nameof(data));
 
                 Waits.WaitUntilExists(Drivers.driver, locator);
-
-                Locators.UploadFile(Drivers.driver, locator, data);
-
-                DriverScript.outcome = (int)Outcome.Pass;
-
-            }
-            catch (Exception e)
-            {
-                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                DriverScript.outcome = (int)Outcome.Error;
-            }
-        }
-
-        public static void UploadMultipleFiles(String obj, String data)
-        {
-            Log.Info($"{MethodBase.GetCurrentMethod().Name} \"{data}\"");
-            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} \"{data}\"");
-            try
-            {
-                By locator = Locators.GetLocator(obj);
-
-                Waits.WaitUntilExists(Drivers.driver, locator);
-
-                string[] filepaths = data.Split(',');
-
-                Locators.UploadMultipleFiles(Drivers.driver, locator, filepaths);
-
-                DriverScript.outcome = (int)Outcome.Pass;
-
-            }
-            catch (Exception e)
-            {
-                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                DriverScript.outcome = (int)Outcome.Error;
-            }
-        }
+                Locators.UploadMultipleFiles(Drivers.driver, locator, filePaths);
+            });
 
         #endregion
     }
