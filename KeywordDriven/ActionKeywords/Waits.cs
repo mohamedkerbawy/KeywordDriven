@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Reflection;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Support.UI;
 using KeywordDriven.Config;
@@ -571,408 +570,108 @@ namespace KeywordDriven.ActionKeywords
         {
             Thread.Sleep(TimeSpan.FromSeconds(seconds));
         }
+
+        internal static void ExecuteWaitKeyword(string keyword, string details, Action operation)
+        {
+            string message = string.IsNullOrWhiteSpace(details) ? keyword : $"{keyword} | {details}";
+            Log.Info(message);
+            ExtentReporter.NodeInfo(message);
+
+            try
+            {
+                operation();
+                DriverScript.outcome = (int)Outcome.Pass;
+            }
+            catch (Exception exception)
+            {
+                string errorMessage = $"{keyword} | Exception: {exception.Message}";
+                Log.Error(errorMessage);
+                ExtentReporter.NodeError(errorMessage);
+                DriverScript.outcome = (int)Outcome.Error;
+            }
+        }
     }
 
     public partial class Keywords
     {
         #region Keywords methods
 
-        public static void WaitUntilClickable(String obj, String data)
-        {
-            Log.Info($"{MethodBase.GetCurrentMethod().Name}");
-            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name}");
+        public static void WaitUntilClickable(string obj, string data) =>
+            Locators.ExecuteLocatorKeyword(nameof(WaitUntilClickable), obj, data,
+                (locator, _) => Waits.WaitUntilClickable(Drivers.driver, locator));
 
-            try
-            {
-                By by = Locators.GetLocator(obj);
+        public static void WaitUntilExists(string obj, string data) =>
+            Locators.ExecuteLocatorKeyword(nameof(WaitUntilExists), obj, data,
+                (locator, _) => Waits.WaitUntilExists(Drivers.driver, locator));
 
-                if (Waits.WaitUntilClickable(Drivers.driver, by))
-                {
-                    DriverScript.outcome = (int) Outcome.Pass;
-                }
-            }
-            catch (Exception e)
-            {
-                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                DriverScript.outcome = (int) Outcome.Error;
-            }
-        }
-        
-        public static void WaitUntilExists(String obj, String data)
-        {
-            Log.Info($"{MethodBase.GetCurrentMethod().Name}");
-            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name}");
+        public static void WaitUntilNotExists(string obj, string data) =>
+            Locators.ExecuteLocatorKeyword(nameof(WaitUntilNotExists), obj, data,
+                (locator, _) => Waits.WaitUntilNotExists(Drivers.driver, locator));
 
-            try
-            {
-                By by = Locators.GetLocator(obj);
+        public static void WaitUntilVisible(string obj, string data) =>
+            Locators.ExecuteLocatorKeyword(nameof(WaitUntilVisible), obj, data,
+                (locator, _) => Waits.WaitUntilVisibleByJs(Drivers.driver, locator));
 
-                if (Waits.WaitUntilExists(Drivers.driver, by))
-                {
-                    DriverScript.outcome = (int)Outcome.Pass;
-                }
-            }
-            catch (Exception e)
-            {
-                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                DriverScript.outcome = (int) Outcome.Error;
-            }
-        }
-        
-        public static void WaitUntilNotExists(String obj, String data)
-        {
-            Log.Info($"{MethodBase.GetCurrentMethod().Name}");
-            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name}");
+        public static void WaitUntilAllVisible(string obj, string data) =>
+            Locators.ExecuteLocatorKeyword(nameof(WaitUntilAllVisible), obj, data,
+                (locator, _) => Waits.WaitUntilAllVisible(Drivers.driver, locator));
 
-            try
-            {
-                By by = Locators.GetLocator(obj);
+        public static void WaitUntilNotVisible(string obj, string data) =>
+            Locators.ExecuteLocatorKeyword(nameof(WaitUntilNotVisible), obj, data,
+                (locator, _) => Waits.WaitUntilNotVisibleByJs(Drivers.driver, locator));
 
-                if (Waits.WaitUntilNotExists(Drivers.driver, by))
-                {
-                    DriverScript.outcome = (int) Outcome.Pass;
-                }
-            }
-            catch (Exception e)
-            {
-                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                DriverScript.outcome = (int) Outcome.Error;
-            }
-        }
-        
-        public static void WaitUntilVisible(String obj, String data)
-        {
-            Log.Info($"{MethodBase.GetCurrentMethod().Name}");
-            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name}");
-            try
-            {
-                By by = Locators.GetLocator(obj);
+        public static void WaitUntilAllNotVisible(string obj, string data) =>
+            Locators.ExecuteLocatorKeyword(nameof(WaitUntilAllNotVisible), obj, data,
+                (locator, _) => Waits.WaitUntilAllNotVisible(Drivers.driver, locator));
 
-                if (Waits.WaitUntilVisibleByJs(Drivers.driver, by))
-                {
-                    DriverScript.outcome = (int)Outcome.Pass;
-                }
+        public static void WaitUntilExistsAndVisible(string obj, string data) =>
+            Locators.ExecuteLocatorKeyword(nameof(WaitUntilExistsAndVisible), obj, data,
+                (locator, _) => Waits.WaitUntilExistsAndVisible(Drivers.driver, locator));
 
-            }
-            catch (Exception e)
-            {
-                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                DriverScript.outcome = (int) Outcome.Error;
-            }
-        }
-        
-        public static void WaitUntilAllVisible(String obj, String data)
-        {
-            Log.Info($"{MethodBase.GetCurrentMethod().Name}");
-            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name}");
-            try
-            {
-                By by = Locators.GetLocator(obj);
+        public static void WaitUntilEditable(string obj, string data) =>
+            Locators.ExecuteLocatorKeyword(nameof(WaitUntilEditable), obj, data,
+                (locator, _) => Waits.WaitUntilEditable(Drivers.driver, locator));
 
-                if (Waits.WaitUntilAllVisible(Drivers.driver, by))
-                {
-                    DriverScript.outcome = (int) Outcome.Pass;
-                }
+        public static void WaitUntilNotEditable(string obj, string data) =>
+            Locators.ExecuteLocatorKeyword(nameof(WaitUntilNotEditable), obj, data,
+                (locator, _) => Waits.WaitUntilNotEditable(Drivers.driver, locator));
 
-            }
-            catch (Exception e)
-            {
-                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: { e.Message}");
-                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: { e.Message}");
-                DriverScript.outcome = (int) Outcome.Error;
-            }
-        }
-        
-        public static void WaitUntilNotVisible(String obj, String data)
-        {
-            Log.Info($"{MethodBase.GetCurrentMethod().Name}");
-            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name}");
-            try
-            {
-                By by = Locators.GetLocator(obj);
+        public static void WaitUntilUrlContains(string obj, string data) =>
+            Waits.ExecuteWaitKeyword(nameof(WaitUntilUrlContains), $"URL contains: {data}",
+                () => Waits.WaitUntilUrlContains(Drivers.driver, data));
 
-                if (Waits.WaitUntilNotVisibleByJs(Drivers.driver, by))
-                {
-                    DriverScript.outcome = (int) Outcome.Pass;
-                }
-                
-            }
-            catch (Exception e)
-            {
-                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                DriverScript.outcome = (int) Outcome.Error;
-            }
-        }
-        
-        public static void WaitUntilAllNotVisible(String obj, String data)
-        {
-            Log.Info($"{MethodBase.GetCurrentMethod().Name}");
-            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name}");
-            try
-            {
-                By by = Locators.GetLocator(obj);
+        public static void WaitUntilUrlContainsIgnoreCase(string obj, string data) =>
+            Waits.ExecuteWaitKeyword(nameof(WaitUntilUrlContainsIgnoreCase), $"URL contains (ignore case): {data}",
+                () => Waits.WaitUntilUrlContainsIgnoreCase(Drivers.driver, data));
 
-                if (Waits.WaitUntilAllNotVisible(Drivers.driver, by))
-                {
-                    DriverScript.outcome = (int) Outcome.Pass;
-                }
+        public static void WaitUntilUrlEquals(string obj, string data) =>
+            Waits.ExecuteWaitKeyword(nameof(WaitUntilUrlEquals), $"URL equals: {data}",
+                () => Waits.WaitUntilUrlEquals(Drivers.driver, data));
 
-            }
-            catch (Exception e)
-            {
-                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                DriverScript.outcome = (int) Outcome.Error;
-            }
-        }
-        
-        public static void WaitUntilExistsAndVisible(String obj, String data)
-        {
-            Log.Info($"{MethodBase.GetCurrentMethod().Name}");
-            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name}");
+        public static void WaitUntilUrlStartsWith(string obj, string data) =>
+            Waits.ExecuteWaitKeyword(nameof(WaitUntilUrlStartsWith), $"URL starts with: {data}",
+                () => Waits.WaitUntilUrlStartsWith(Drivers.driver, data));
 
-            try
-            {
-                By by = Locators.GetLocator(obj);
+        public static void WaitUntilUrlEndsWith(string obj, string data) =>
+            Waits.ExecuteWaitKeyword(nameof(WaitUntilUrlEndsWith), $"URL ends with: {data}",
+                () => Waits.WaitUntilUrlEndsWith(Drivers.driver, data));
 
-                if (Waits.WaitUntilExistsAndVisible(Drivers.driver, by))
-                {
-                    DriverScript.outcome = (int)Outcome.Pass;
-                }
-            }
-            catch (Exception e)
-            {
-                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                DriverScript.outcome = (int) Outcome.Error;
-            }
-        }
-        
-        public static void WaitUntilEditable(String obj, String data)
-        {
-            Log.Info($"{MethodBase.GetCurrentMethod().Name}");
-            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name}");
-            try
-            {
-                By by = Locators.GetLocator(obj);
+        public static void WaitUntilUrlMatchesPattern(string obj, string data) =>
+            Waits.ExecuteWaitKeyword(nameof(WaitUntilUrlMatchesPattern), $"URL pattern: {data}",
+                () => Waits.WaitUntilUrlMatchesPattern(Drivers.driver, data));
 
-                if (Waits.WaitUntilEditable(Drivers.driver, by))
-                {
-                    DriverScript.outcome = (int) Outcome.Pass;
-                }
-            }
-            catch (Exception e)
-            {
-                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                DriverScript.outcome = (int) Outcome.Error;
-            }
-        }
-        
-        public static void WaitUntilNotEditable(String obj, String data)
-        {
-            Log.Info($"{MethodBase.GetCurrentMethod().Name}");
-            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name}");
-            try
-            {
-                By by = Locators.GetLocator(obj);
+        public static void WaitUntilPageLoaded(string obj, string data) =>
+            Waits.ExecuteWaitKeyword(nameof(WaitUntilPageLoaded), "Wait for document load",
+                () => Waits.WaitUntilPageLoaded(Drivers.driver));
 
-                if (Waits.WaitUntilNotEditable(Drivers.driver, by))
-                {
-                    DriverScript.outcome = (int) Outcome.Pass;
-                }
-            }
-            catch (Exception e)
-            {
-                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                DriverScript.outcome = (int) Outcome.Error;
-            }
-        }
-        
-        public static void WaitUntilUrlContains(String obj, String data)
-        {
-            Log.Info($"{MethodBase.GetCurrentMethod().Name}");
-            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name}");
-            try
-            {
+        public static void WaitUntilTextContains(string obj, string data) =>
+            Locators.ExecuteLocatorKeyword(nameof(WaitUntilTextContains), obj, data,
+                (locator, text) => Waits.WaitUntilTextContains(Drivers.driver, locator, text));
 
-                if (Waits.WaitUntilUrlContains(Drivers.driver, data))
-                {
-                    DriverScript.outcome = (int) Outcome.Pass;
-                }
-            }
-            catch (Exception e)
-            {
-                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                DriverScript.outcome = (int) Outcome.Error;
-            }
-        }
-        
-        public static void WaitUntilUrlContainsIgnoreCase(String obj, String data)
-        {
-            Log.Info($"{MethodBase.GetCurrentMethod().Name}");
-            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name}");
-            try
-            {
-                if (Waits.WaitUntilUrlContainsIgnoreCase(Drivers.driver, data))
-                {
-                    DriverScript.outcome = (int) Outcome.Pass;
-                }
-            }
-            catch (Exception e)
-            {
-                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                DriverScript.outcome = (int) Outcome.Error;
-            }
-        }
-        
-        public static void WaitUntilUrlEquals(String obj, String data)
-        {
-            Log.Info($"{MethodBase.GetCurrentMethod().Name}");
-            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name}");
-            try
-            {
+        public static void WaitSeconds(string obj, string data) =>
+            Waits.ExecuteWaitKeyword(nameof(WaitSeconds), $"Seconds: {data}",
+                () => Waits.WaitSeconds(Convert.ToInt32(data)));
 
-                if (Waits.WaitUntilUrlEquals(Drivers.driver, data))
-                {
-                    DriverScript.outcome = (int) Outcome.Pass;
-                }
-            }
-            catch (Exception e)
-            {
-                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                DriverScript.outcome = (int) Outcome.Error;
-            }
-        }
-        
-        public static void WaitUntilUrlStartsWith(String obj, String data)
-        {
-            Log.Info($"{MethodBase.GetCurrentMethod().Name}");
-            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name}");
-            try
-            {
-
-                if (Waits.WaitUntilUrlStartsWith(Drivers.driver, data))
-                {
-                    DriverScript.outcome = (int) Outcome.Pass;
-                }
-            }
-            catch (Exception e)
-            {
-                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                DriverScript.outcome = (int) Outcome.Error;
-            }
-        }
-        
-        public static void WaitUntilUrlEndsWith(String obj, String data)
-        {
-            Log.Info($"{MethodBase.GetCurrentMethod().Name}");
-            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name}");
-            try
-            {
-
-                if (Waits.WaitUntilUrlEndsWith(Drivers.driver, data))
-                {
-                    DriverScript.outcome = (int) Outcome.Pass;
-                }
-            }
-            catch (Exception e)
-            {
-                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                DriverScript.outcome = (int) Outcome.Error;
-            }
-        }
-        
-        public static void WaitUntilUrlMatchesPattern(String obj, String data)
-        {
-            Log.Info($"{MethodBase.GetCurrentMethod().Name}");
-            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name}");
-            try
-            {
-
-                if (Waits.WaitUntilUrlMatchesPattern(Drivers.driver, data))
-                {
-                    DriverScript.outcome = (int) Outcome.Pass;
-                }
-            }
-            catch (Exception e)
-            {
-                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name}| Exception: {e.Message}");
-                DriverScript.outcome = (int) Outcome.Error;
-            }
-        }
-
-        public static void WaitUntilPageLoaded(String obj, String data)
-        {
-            Log.Info($"{MethodBase.GetCurrentMethod().Name}");
-            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name}");
-            try
-            {
-                if (Waits.WaitUntilPageLoaded(Drivers.driver))
-                {
-                    DriverScript.outcome = (int)Outcome.Pass;
-                }
-            }
-            catch (Exception e)
-            {
-                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                DriverScript.outcome = (int)Outcome.Error;
-            }
-        }
-
-        public static void WaitUntilTextContains(String obj, String data)
-        {
-            Log.Info($"{MethodBase.GetCurrentMethod().Name} \"{data}\"");
-            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} \"{data}\"");
-            try
-            {
-                By by = Locators.GetLocator(obj);
-
-                if (Waits.WaitUntilTextContains(Drivers.driver, by, data))
-                {
-                    DriverScript.outcome = (int)Outcome.Pass;
-                }
-            }
-            catch (Exception e)
-            {
-                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                DriverScript.outcome = (int)Outcome.Error;
-            }
-        }
-        
-        public static void WaitSeconds(String obj, String data)
-        {
-            Log.Info($"{MethodBase.GetCurrentMethod().Name} \"{data}\"");
-            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} \"{data}\"");
-
-            try
-            {
-                Waits.WaitSeconds(Convert.ToInt32(data));
-
-                DriverScript.outcome = (int) Outcome.Pass;
-            }
-            catch (Exception e)
-            {
-                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                DriverScript.outcome = (int) Outcome.Error;
-            }
-        }
-        
         #endregion
     }
 }

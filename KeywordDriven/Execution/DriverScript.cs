@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 using KeywordDriven.Config;
 using KeywordDriven.Utils;
 using KeywordDriven.ActionKeywords;
@@ -81,6 +82,7 @@ namespace KeywordDriven.Execution
                     testLastStep = ExcelManager.GetTestStepsCount(ExcelSetting.Sheet_TestSteps, testCaseID, testStep);
 
                     outcome = (int)Outcome.Pass;
+                    Verifications.BeginTestCase();
 
                     // This loop will execute number of times equal to total number of test steps for the current test case
                     for (; testStep < testLastStep; testStep++)
@@ -116,6 +118,14 @@ namespace KeywordDriven.Execution
                             ExtentReporter.EndTestCase(outcome, testCaseID + "_" + testCaseTitle);
                             break;
                         }
+                    }
+
+                    if (outcome == (int)Outcome.Pass && Verifications.HasFailures)
+                    {
+                        outcome = (int)Outcome.Fail;
+                        string failureSummary = $"Soft verification failures: {Verifications.FailureSummary}";
+                        Log.Fail(failureSummary);
+                        ExtentReporter.Fail(failureSummary);
                     }
 
                     //check if all results is Pass for the current test case and set the overall test case result as Pass
@@ -170,7 +180,14 @@ namespace KeywordDriven.Execution
                     outcome = (int)Outcome.Error;
                 }
 
-                if (outcome == (int)Outcome.Pass)
+                if (outcome == (int)Outcome.Pass
+                    && actionKeyword.StartsWith("Verify", StringComparison.Ordinal)
+                    && Verifications.CurrentStepFailed)
+                {
+                    ExcelManager.SetCellData(Outcome.Fail.ToString(), testStep, ExcelSetting.Col_TestSteps_Result, ExcelSetting.Sheet_TestSteps);
+                    ExtentReporter.Fail(testStepDesc);
+                }
+                else if (outcome == (int)Outcome.Pass)
                 {
                     ExcelManager.SetCellData(Outcome.Pass.ToString(), testStep, ExcelSetting.Col_TestSteps_Result, ExcelSetting.Sheet_TestSteps);
                     ExtentReporter.Pass(testStepDesc);

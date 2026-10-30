@@ -37,35 +37,7 @@ namespace KeywordDriven.ActionKeywords
                     $"Unsupported matchType: '{matchType}'. Valid: exact, contains, startswith, endswith, notequal, notcontains, regex",
                     nameof(matchType))
             };
-        }
-
-        internal static void Run(string keyword, string details, Func<bool> assertion)
-        {
-            Log.Info($"{keyword}: {details}");
-            ExtentReporter.NodeInfo($"{keyword}: {details}");
-
-            try
-            {
-                if (assertion())
-                {
-                    DriverScript.outcome = (int)Outcome.Pass;
-                    Log.Pass($"{keyword}: passed");
-                    ExtentReporter.NodePass($"{keyword}: passed");
-                }
-                else
-                {
-                    DriverScript.outcome = (int)Outcome.Fail;
-                    Log.Fail($"{keyword}: assertion failed ({details})");
-                    ExtentReporter.NodeFail($"{keyword}: assertion failed ({details})");
-                }
-            }
-            catch (Exception e)
-            {
-                DriverScript.outcome = (int)Outcome.Error;
-                Log.Error($"{keyword}: {e.Message}");
-                ExtentReporter.NodeError($"{keyword}: {e.Message}");
-            }
-        }
+        }    
 
         internal static IWebElement FindElement(IWebDriver driver, By locator)
         {
@@ -186,6 +158,34 @@ namespace KeywordDriven.ActionKeywords
         {
             IWebElement element = FindElement(Drivers.driver, Locators.GetLocator(obj));
             return element != null && predicate(element);
+        }
+
+        internal static void Run(string keyword, string details, Func<bool> assertion)
+        {
+            Log.Info($"{keyword}: {details}");
+            ExtentReporter.NodeInfo($"{keyword}: {details}");
+
+            try
+            {
+                if (assertion())
+                {
+                    DriverScript.outcome = (int)Outcome.Pass;
+                    Log.Pass($"{keyword}: passed");
+                    ExtentReporter.NodePass($"{keyword}: passed");
+                }
+                else
+                {
+                    DriverScript.outcome = (int)Outcome.Fail;
+                    Log.Fail($"{keyword}: assertion failed ({details})");
+                    ExtentReporter.NodeFail($"{keyword}: assertion failed ({details})");
+                }
+            }
+            catch (Exception exception)
+            {
+                DriverScript.outcome = (int)Outcome.Error;
+                Log.Error($"{keyword}: {exception.Message}");
+                ExtentReporter.NodeError($"{keyword}: {exception.Message}");
+            }
         }
     }
 

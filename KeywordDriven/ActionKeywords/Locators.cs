@@ -687,10 +687,10 @@ namespace KeywordDriven.ActionKeywords
                 operation(Locators.GetLocator(obj), data);
                 DriverScript.outcome = (int)Outcome.Pass;
             }
-            catch (Exception e)
+            catch (Exception exception)
             {
-                Log.Error($"{keyword} | Exception: {e.Message}");
-                ExtentReporter.NodeError($"{keyword} | Exception: {e.Message}");
+                Log.Error($"{keyword} | Exception: {exception.Message}");
+                ExtentReporter.NodeError($"{keyword} | Exception: {exception.Message}");
                 DriverScript.outcome = (int)Outcome.Error;
             }
         }

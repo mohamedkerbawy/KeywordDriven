@@ -1,17 +1,13 @@
-﻿using AngleSharp.Text;
-using KeywordDriven.Config;
+﻿using KeywordDriven.Config;
 using KeywordDriven.Execution;
 using KeywordDriven.Utils;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Edge;
 using OpenQA.Selenium.Firefox;
-using OpenQA.Selenium.Remote;
 using OpenQA.Selenium.Support.UI;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
+using System.Linq;
 using WebDriverManager;
 using WebDriverManager.DriverConfigs.Impl;
 
@@ -147,33 +143,43 @@ namespace KeywordDriven.ActionKeywords
         /// <exception cref="Exception"></exception>
         internal static IWebDriver OpenBrowser(string browserType = "chrome")
         {
+            if (string.IsNullOrWhiteSpace(browserType))
+                throw new ArgumentException("Browser type cannot be null or empty.", nameof(browserType));
+            if (driver != null)
+                throw new InvalidOperationException("A browser session is already open. Close it before opening another.");
+            if (DriverSetting.DefaultTimeoutSeconds <= 0 || DriverSetting.PageLoadTimeoutSeconds <= 0)
+                throw new InvalidOperationException("Browser timeout settings must be greater than zero.");
+
+            IWebDriver newDriver = browserType.Trim().ToLowerInvariant() switch
+            {
+                "chrome" => OpenChrome(),
+                "firefox" => OpenFirefox(),
+                "edge" => OpenEdge(),
+                _ => throw new ArgumentException(
+                    $"Unsupported browser: '{browserType}'. Valid options: chrome, firefox, edge.",
+                    nameof(browserType))
+            };
+
             try
             {
-                driver = browserType.Trim().ToLower() switch
-                {
-                    "chrome" => OpenChrome(),
-                    "firefox" => OpenFirefox(),
-                    "edge" => OpenEdge(),
-                    _ => throw new ArgumentException(
-                            $"Unsupported browser: '{browserType}'. Valid options: chrome, firefox, edge")
-                };
+                var timeouts = newDriver.Manage().Timeouts();
+                timeouts.ImplicitWait = TimeSpan.Zero;
+                timeouts.PageLoad = TimeSpan.FromSeconds(DriverSetting.PageLoadTimeoutSeconds);
+                timeouts.AsynchronousJavaScript = TimeSpan.FromSeconds(DriverSetting.DefaultTimeoutSeconds);
+                if (!DriverSetting.Headless)
+                    newDriver.Manage().Window.Maximize();
 
-                driver.Manage().Window.Maximize();
-                driver.Manage().Timeouts().ImplicitWait = TimeSpan.FromSeconds(DriverSetting.DefaultTimeoutSeconds);
-
-                Console.WriteLine($"OpenBrowser launched successfully | Browser: {browserType} | Headless: {DriverSetting.Headless}");
-                Log.Info($"OpenBrowser launched successfully | Browser: {browserType} | Headless: {DriverSetting.Headless}");
-                ExtentReporter.NodeInfo($"OpenBrowser launched successfully | Browser: {browserType} | Headless: {DriverSetting.Headless}");
+                driver = newDriver;
+                string message = $"OpenBrowser launched successfully | Browser: {browserType} | Headless: {DriverSetting.Headless}";
+                Console.WriteLine(message);
+                Log.Info(message);
+                ExtentReporter.NodeInfo(message);
                 return driver;
             }
-            catch (ArgumentException ex)
+            catch
             {
-                Console.WriteLine($"OpenBrowser - {ex.Message}");
+                newDriver.Quit();
                 throw;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"OpenBrowser failed [{browserType}]: {ex.Message}");
             }
         }
 
@@ -224,16 +230,18 @@ namespace KeywordDriven.ActionKeywords
                 if (string.IsNullOrWhiteSpace(url))
                     throw new ArgumentException("URL cannot be null or empty.");
 
-                // Prepend https:// if no scheme is provided
-                if (!url.StartsWith("http://") && !url.StartsWith("https://"))
+                url = url.Trim();
+                if (!url.Contains("://", StringComparison.Ordinal))
                     url = "https://" + url;
 
-                driver.Navigate().GoToUrl(url);
+                if (!Uri.TryCreate(url, UriKind.Absolute, out Uri targetUri)
+                    || (targetUri.Scheme != Uri.UriSchemeHttp && targetUri.Scheme != Uri.UriSchemeHttps))
+                    throw new ArgumentException("URL must be a valid HTTP or HTTPS address.", nameof(url));
+
+                driver.Navigate().GoToUrl(targetUri);
 
                 // Wait until page is fully loaded
-                WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(DriverSetting.PageLoadTimeoutSeconds));
-                wait.Until(driver => ((IJavaScriptExecutor)driver)
-                    .ExecuteScript("return document.readyState").ToString() == "complete");
+                WaitForDocumentReady();
 
                 Console.WriteLine($"NavigateToUrl | URL: {url} | Title: {driver.Title}");
                 Log.Info($"NavigateToUrl | URL: {url} | Title: {driver.Title}");
@@ -272,9 +280,7 @@ namespace KeywordDriven.ActionKeywords
                 driver.Navigate().Refresh();
 
                 // Wait for page to fully reload
-                WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(30));
-                wait.Until(driver => ((IJavaScriptExecutor)driver)
-                    .ExecuteScript("return document.readyState").ToString() == "complete");
+                WaitForDocumentReady();
 
                 Console.WriteLine($"RefreshPage | URL: {urlBefore} | Title Before: {titleBefore} | Title After: {driver.Title}");
                 Log.Info($"RefreshPage | URL: {urlBefore} | Title Before: {titleBefore} | Title After: {driver.Title}");
@@ -307,9 +313,7 @@ namespace KeywordDriven.ActionKeywords
                 driver.Navigate().Back();
 
                 // Wait for page to fully load
-                WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(30));
-                wait.Until(driver => ((IJavaScriptExecutor)driver)
-                    .ExecuteScript("return document.readyState").ToString() == "complete");
+                WaitForDocumentReady();
 
                 Console.WriteLine($"NavigateBack | From: {urlBefore} | To: {driver.Url}");
                 Log.Info($"NavigateBack | From: {urlBefore} | To: {driver.Url}");
@@ -343,9 +347,7 @@ namespace KeywordDriven.ActionKeywords
                 driver.Navigate().Forward();
 
                 // Wait for page to fully load
-                WebDriverWait wait = new WebDriverWait(driver, TimeSpan.FromSeconds(30));
-                wait.Until(driver => ((IJavaScriptExecutor)driver)
-                    .ExecuteScript("return document.readyState").ToString() == "complete");
+                WaitForDocumentReady();
 
                 Console.WriteLine($"NavigateForward | From: {urlBefore} | To: {driver.Url}");
                 Log.Info($"NavigateForward | From: {urlBefore} | To: {driver.Url}");
@@ -411,190 +413,207 @@ namespace KeywordDriven.ActionKeywords
             }
         }
 
+        private static void WaitForDocumentReady()
+        {
+            var wait = new WebDriverWait(
+                driver,
+                TimeSpan.FromSeconds(DriverSetting.PageLoadTimeoutSeconds));
+            wait.Until(currentDriver =>
+                string.Equals(
+                    ((IJavaScriptExecutor)currentDriver).ExecuteScript("return document.readyState")?.ToString(),
+                    "complete",
+                    StringComparison.Ordinal));
+        }
+
+        internal static void MinimizeBrowser()
+        {
+            EnsureBrowserOpen(nameof(MinimizeBrowser));
+            driver.Manage().Window.Minimize();
+        }
+
+        internal static void FullScreenBrowser()
+        {
+            EnsureBrowserOpen(nameof(FullScreenBrowser));
+            driver.Manage().Window.FullScreen();
+        }
+
+        internal static void SwitchToWindow(string windowIdentifier)
+        {
+            EnsureBrowserOpen(nameof(SwitchToWindow));
+            if (string.IsNullOrWhiteSpace(windowIdentifier))
+                throw new ArgumentException("Window handle or title cannot be empty.", nameof(windowIdentifier));
+
+            var handles = driver.WindowHandles;
+            string matchingHandle = handles.FirstOrDefault(handle =>
+                string.Equals(handle, windowIdentifier, StringComparison.Ordinal));
+
+            if (matchingHandle != null)
+            {
+                driver.SwitchTo().Window(matchingHandle);
+                return;
+            }
+
+            string originalHandle = driver.CurrentWindowHandle;
+            foreach (string handle in handles)
+            {
+                driver.SwitchTo().Window(handle);
+                if (string.Equals(driver.Title, windowIdentifier, StringComparison.Ordinal))
+                    return;
+            }
+
+            driver.SwitchTo().Window(originalHandle);
+            throw new NoSuchWindowException($"No open window has handle or title '{windowIdentifier}'.");
+        }
+
+        internal static void SwitchToFrame(By frameLocator)
+        {
+            EnsureBrowserOpen(nameof(SwitchToFrame));
+            driver.SwitchTo().Frame(driver.FindElement(frameLocator));
+        }
+
+        internal static void SwitchToDefaultContent()
+        {
+            EnsureBrowserOpen(nameof(SwitchToDefaultContent));
+            driver.SwitchTo().DefaultContent();
+        }
+
+        internal static void CloseBrowserWindow()
+        {
+            EnsureBrowserOpen(nameof(CloseBrowserWindow));
+            if (driver.WindowHandles.Count <= 1)
+            {
+                CloseAllBrowsers();
+                return;
+            }
+
+            driver.Close();
+            driver.SwitchTo().Window(driver.WindowHandles.First());
+        }
+
+        internal static void CloseAllBrowsers()
+        {
+            if (driver == null)
+                return;
+
+            IWebDriver currentDriver = driver;
+            driver = null;
+            currentDriver.Quit();
+        }
+
+        private static void EnsureBrowserOpen(string operation)
+        {
+            if (driver == null)
+                throw new InvalidOperationException($"Browser is not open. Call OpenBrowser before {operation}.");
+        }
+
+        internal static void ExecuteDriverKeyword(string keyword, string details, Action action, bool preserveExistingOutcome = false)
+        {
+            string message = string.IsNullOrWhiteSpace(details) ? keyword : $"{keyword} | {details}";
+            Log.Info(message);
+            ExtentReporter.NodeInfo(message);
+
+            try
+            {
+                action();
+                if (!preserveExistingOutcome || DriverScript.outcome == (int)Outcome.Pass)
+                    DriverScript.outcome = (int)Outcome.Pass;
+            }
+            catch (Exception exception)
+            {
+                string errorMessage = $"{keyword} failed | {exception.Message}";
+                Log.Error(errorMessage);
+                ExtentReporter.NodeError(errorMessage);
+                DriverScript.outcome = (int)Outcome.Error;
+            }
+        }
+
     }
-    
+
     public partial class Keywords
     {
         #region Keywords methods
-
-        public static void OpenBrowser(String obj, String data)
+       
+        public static void OpenBrowser(string obj, string data)
         {
-            Log.Info($"{MethodBase.GetCurrentMethod().Name} \"{data}\"");
-            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} \"{data}\"");
-            try
-            {
-                Drivers.driver = Drivers.OpenBrowser(data);
-
-                DriverScript.outcome = 1;
-            }
-            catch (Exception e)
-            {
-                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                DriverScript.outcome = (int) Outcome.Error;
-            }
-        }
-        
-        public static void CloseBrowser(String obj, String data)
-        {
-            Log.Info($"{MethodBase.GetCurrentMethod().Name}");
-            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name}");
-
-            try
-            {
-                Drivers.driver?.Close();
-                DriverScript.outcome = 1;
-
-                Log.Info($"{MethodBase.GetCurrentMethod().Name} | Window closed.");
-                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} | Window closed.");
-            }
-            catch (Exception e)
-            {
-                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: " + e.Message);
-                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: " + e.Message);
-                DriverScript.outcome = (int) Outcome.Error;
-            }
-        }
-        
-        public static void CloseAllBrowser(String obj, String data)
-        {
-            Log.Info($"{MethodBase.GetCurrentMethod().Name}");
-            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name}");
-
-            try
-            {
-                Drivers.driver?.Quit();
-                Drivers.driver = null;
-
-                Console.WriteLine($"{MethodBase.GetCurrentMethod().Name} | Driver terminated.");
-                Log.Info($"{MethodBase.GetCurrentMethod().Name} | Driver terminated.");
-                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} | Driver terminated.");
-            }
-            catch (Exception e)
-            {
-                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: " + e.Message);
-                ExtentReporter.NodeError($"{MethodBase.GetCurrentMethod().Name} | Exception: " + e.Message);
-                DriverScript.outcome = (int)Outcome.Error;
-            }
-        }     
-        
-        public static void MaximizeBrowser(String obj, String data)
-        {
-            Log.Info($"{MethodBase.GetCurrentMethod().Name}");
-            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name}");
-            try
-            {
-                Drivers.MaximizeBrowser();
-
-                DriverScript.outcome = 1;
-            }
-            catch (Exception e)
-            {
-                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                DriverScript.outcome = (int)Outcome.Error;
-            }
-        }
-        
-        public static void NavigateToURL(String obj, String data)
-        {
-            try
-            {
-                Log.Info($"{MethodBase.GetCurrentMethod().Name} \"{data}\"");
-                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} \"{data}\"");
-
-                Drivers.NavigateToUrl(data);
-
-                DriverScript.outcome = 1;
-
-            }
-            catch (Exception e)
-            {
-                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: " + e.Message);
-                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} | Exception: " + e.Message);
-                DriverScript.outcome = (int) Outcome.Error;
-            }
+            Drivers.ExecuteDriverKeyword(nameof(OpenBrowser), $"Browser: {data}", () => Drivers.OpenBrowser(data));
         }
 
-        public static void RefreshPage(String obj, String data)
+        public static void CloseBrowser(string obj, string data)
         {
-            Log.Info($"{MethodBase.GetCurrentMethod().Name}");
-            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name}");
-            try
-            {
-                Drivers.RefreshPage();
-
-                DriverScript.outcome = 1;
-            }
-            catch (Exception e)
-            {
-                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                DriverScript.outcome = (int)Outcome.Error;
-            }
+            Drivers.ExecuteDriverKeyword(
+                nameof(CloseBrowser),
+                "Close current browser window",
+                Drivers.CloseBrowserWindow,
+                preserveExistingOutcome: true);
         }
-        
-        public static void NavigateBack(String obj, String data)
+
+        public static void CloseAllBrowser(string obj, string data)
         {
-            try
-            {
-                Log.Info($"{MethodBase.GetCurrentMethod().Name}");
-                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name}");
-
-                Drivers.NavigateBack();
-
-                DriverScript.outcome = 1;
-
-            }
-            catch (Exception e)
-            {
-                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                DriverScript.outcome = (int) Outcome.Error;
-            }
+            Drivers.ExecuteDriverKeyword(nameof(CloseAllBrowser), "Close all browser windows", Drivers.CloseAllBrowsers);
         }
-        
-        public static void NavigateForward(String obj, String data)
+
+        public static void MaximizeBrowser(string obj, string data)
         {
-            try
-            {
-                Log.Info($"{MethodBase.GetCurrentMethod().Name}");
-                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name}");
+            Drivers.ExecuteDriverKeyword(nameof(MaximizeBrowser), string.Empty, Drivers.MaximizeBrowser);
+        }
 
-                Drivers.NavigateForward();
-
-                DriverScript.outcome = 1;
-
-            }
-            catch (Exception e)
-            {
-                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                DriverScript.outcome = (int)Outcome.Error;
-            }
-        }        
-        
-        public static void SetWindowSize(String obj, String data)
+        public static void MinimizeBrowser(string obj, string data)
         {
-            Log.Info($"{MethodBase.GetCurrentMethod().Name}");
-            ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name}");
-            try
-            {
-                string[] size = data.Split(',');
+            Drivers.ExecuteDriverKeyword(nameof(MinimizeBrowser), string.Empty, Drivers.MinimizeBrowser);
+        }
 
-                int width =Convert.ToInt32(size[0]);
-                int height = Convert.ToInt32(size[1]);
+        public static void FullScreenBrowser(string obj, string data)
+        {
+            Drivers.ExecuteDriverKeyword(nameof(FullScreenBrowser), string.Empty, Drivers.FullScreenBrowser);
+        }
+
+        public static void NavigateToURL(string obj, string data)
+        {
+            Drivers.ExecuteDriverKeyword(nameof(NavigateToURL), $"URL: {data}", () => Drivers.NavigateToUrl(data));
+        }
+
+        public static void RefreshPage(string obj, string data)
+        {
+            Drivers.ExecuteDriverKeyword(nameof(RefreshPage), string.Empty, Drivers.RefreshPage);
+        }
+
+        public static void NavigateBack(string obj, string data)
+        {
+            Drivers.ExecuteDriverKeyword(nameof(NavigateBack), string.Empty, Drivers.NavigateBack);
+        }
+
+        public static void NavigateForward(string obj, string data)
+        {
+            Drivers.ExecuteDriverKeyword(nameof(NavigateForward), string.Empty, Drivers.NavigateForward);
+        }
+
+        public static void SetWindowSize(string obj, string data)
+        {
+            Drivers.ExecuteDriverKeyword(nameof(SetWindowSize), $"Size: {data}", () =>
+            {
+                string[] dimensions = data?.Split(',');
+                if (dimensions == null || dimensions.Length != 2
+                    || !int.TryParse(dimensions[0].Trim(), out int width)
+                    || !int.TryParse(dimensions[1].Trim(), out int height))
+                    throw new ArgumentException("Window size must be provided as width,height (for example 1280,720).", nameof(data));
 
                 Drivers.SetWindowSize(width, height);
+            });
+        }
 
-                DriverScript.outcome = 1;
-            }
-            catch (Exception e)
-            {
-                Log.Error($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                DriverScript.outcome = (int)Outcome.Error;
-            }
+        public static void SwitchToWindow(string obj, string data)
+        {
+            Drivers.ExecuteDriverKeyword(nameof(SwitchToWindow), $"Window: {data}", () => Drivers.SwitchToWindow(data));
+        }
+
+        public static void SwitchToFrame(string obj, string data)
+        {
+            Drivers.ExecuteDriverKeyword(nameof(SwitchToFrame), $"Frame locator: {obj}", () => Drivers.SwitchToFrame(Locators.GetLocator(obj)));
+        }
+
+        public static void SwitchToDefaultContent(string obj, string data)
+        {
+            Drivers.ExecuteDriverKeyword(nameof(SwitchToDefaultContent), string.Empty, Drivers.SwitchToDefaultContent);
         }
 
         #endregion
