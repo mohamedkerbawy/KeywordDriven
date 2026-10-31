@@ -1,9 +1,0 @@
-[2026-10-31 01:11:23] [INFO   ] Start TestCase TS1
-[2026-10-31 01:11:23] [INFO   ] OpenBrowser | Browser: Chrome
-[2026-10-31 01:11:26] [INFO   ] OpenBrowser launched successfully | Browser: Chrome | Headless: False
-[2026-10-31 01:11:26] [INFO   ] NavigateToUrl | URL: https://www.google.com
-[2026-10-31 01:11:30] [INFO   ] NavigateToUrl | URL: https://www.google.com | Title: Google
-[2026-10-31 01:11:30] [ERROR  ] Action Keyword: Input not found.
-[2026-10-31 01:11:30] [INFO   ] CloseBrowser | Close current browser window
-[2026-10-31 01:11:30] [ERROR  ] End TestCase TS1, Result: ERROR
-[2026-10-31 01:11:30] [ERROR  ] End TestCase TS1, Result: ERROR
