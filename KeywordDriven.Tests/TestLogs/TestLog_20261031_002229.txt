@@ -1,0 +1,4 @@
+[2026-10-31 00:22:29] [INFO   ] Start TestCase TS1
+[2026-10-31 00:22:29] [INFO   ] OpenBrowser | Browser: Chrome
+[2026-10-31 00:22:32] [INFO   ] OpenBrowser launched successfully | Browser: Chrome | Headless: False
+[2026-10-31 00:22:32] [PASS   ] End TestCase TS1, Result: PASS

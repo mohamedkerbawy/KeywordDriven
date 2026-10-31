@@ -17,10 +17,7 @@ namespace KeywordDriven.ActionKeywords
     {
         internal static IWebDriver driver;
 
-        /// <summary>
-        /// Launches Google Chrome with optional headless mode
-        /// </summary>
-        internal static IWebDriver OpenChrome()
+        private static IWebDriver OpenChrome()
         {
             try
             {
@@ -59,11 +56,8 @@ namespace KeywordDriven.ActionKeywords
                 throw new Exception($"OpenChrome failed: {ex.Message}");
             }
         }
-
-        /// <summary>
-        /// Launches Mozilla Firefox with optional headless mode
-        /// </summary>
-        internal static IWebDriver OpenFirefox()
+        
+        private static IWebDriver OpenFirefox()
         {
             try
             {
@@ -97,10 +91,7 @@ namespace KeywordDriven.ActionKeywords
             }
         }
 
-        /// <summary>
-        /// Launches Microsoft Edge (Chromium) with optional headless mode
-        /// </summary>
-        internal static IWebDriver OpenEdge()
+        private static IWebDriver OpenEdge()
         {
             try
             {
@@ -135,12 +126,6 @@ namespace KeywordDriven.ActionKeywords
             }
         }
 
-        /// <summary>
-        /// Generic OpenBrowser keyword — routes to specific browser method
-        /// </summary>
-        /// <param name="browserType"></param>
-        /// <returns></returns>
-        /// <exception cref="Exception"></exception>
         internal static IWebDriver OpenBrowser(string browserType = "chrome")
         {
             if (string.IsNullOrWhiteSpace(browserType))
@@ -183,9 +168,6 @@ namespace KeywordDriven.ActionKeywords
             }
         }
 
-        /// <summary>
-        /// Maximizes the current browser window to full screen.
-        /// </summary>
         internal static void MaximizeBrowser()
         {
             try
@@ -214,11 +196,6 @@ namespace KeywordDriven.ActionKeywords
             }
         }
 
-        /// <summary>
-        /// Navigates the current browser session to the specified URL.
-        /// Must be called after OpenBrowser.
-        /// </summary>
-        /// <param name="url">Full URL to navigate to (e.g. https://example.com)</param>
         internal static void NavigateToUrl(string url)
         {
             try
@@ -263,9 +240,6 @@ namespace KeywordDriven.ActionKeywords
             }
         }
 
-        /// <summary>
-        /// Refreshes the current browser page and waits for full reload.
-        /// </summary>
         internal static void RefreshPage()
         {
             try
@@ -296,10 +270,7 @@ namespace KeywordDriven.ActionKeywords
                 throw new Exception($"RefreshPage failed | {ex.Message}");
             }
         }
-        /// <summary>
-        /// Navigates the browser back to the previous page in history.
-        /// Waits for the page to fully load after navigating.
-        /// </summary>
+
         internal static void NavigateBack()
         {
             try
@@ -330,10 +301,6 @@ namespace KeywordDriven.ActionKeywords
             }
         }
 
-        /// <summary>
-        /// Navigates the browser forward to the next page in history.
-        /// Waits for the page to fully load after navigating.
-        /// </summary>
         internal static void NavigateForward()
         {
             try
@@ -364,12 +331,6 @@ namespace KeywordDriven.ActionKeywords
             }
         }
 
-        /// <summary>
-        /// Sets the browser window to a specific width and height in pixels.
-        /// </summary>
-        /// <param name="width"></param>
-        /// <param name="height"></param>
-        /// <exception cref="Exception"></exception>
         internal static void SetWindowSize(int width, int height)
         {
             try
@@ -567,9 +528,9 @@ namespace KeywordDriven.ActionKeywords
             Drivers.ExecuteDriverKeyword(nameof(FullScreenBrowser), string.Empty, Drivers.FullScreenBrowser);
         }
 
-        public static void NavigateToURL(string obj, string data)
+        public static void NavigateToUrl(string obj, string data)
         {
-            Drivers.ExecuteDriverKeyword(nameof(NavigateToURL), $"URL: {data}", () => Drivers.NavigateToUrl(data));
+            Drivers.ExecuteDriverKeyword(nameof(NavigateToUrl), $"URL: {data}", () => Drivers.NavigateToUrl(data));
         }
 
         public static void RefreshPage(string obj, string data)

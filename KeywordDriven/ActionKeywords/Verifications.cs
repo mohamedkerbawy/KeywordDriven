@@ -8,10 +8,13 @@ namespace KeywordDriven.ActionKeywords
     internal static class Verifications
     {
         private static readonly List<string> failures = new();
+        
         private static bool currentStepFailed;
 
         internal static bool HasFailures => failures.Count > 0;
+        
         internal static bool CurrentStepFailed => currentStepFailed;
+        
         internal static string FailureSummary => string.Join("; ", failures);
 
         internal static void BeginTestCase()
@@ -176,7 +179,7 @@ namespace KeywordDriven.ActionKeywords
                     obj, element => Assertions.HasExpectedSelection(element, "radio", selected: false)));
 
         public static void VerifyRadioSeleced(string obj, string data) => VerifyRadioSelected(obj, data);
-
+        
         public static void VerifyRadioNotSeleced(string obj, string data) => VerifyRadioNotSelected(obj, data);
 
         public static void VerifyPageContainsTitle(string obj, string data) =>

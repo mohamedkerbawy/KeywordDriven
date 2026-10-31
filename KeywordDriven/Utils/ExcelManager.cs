@@ -1,147 +1,132 @@
-﻿using KeywordDriven.Config;
+using ClosedXML.Excel;
+using KeywordDriven.Config;
 using System;
 using System.IO;
-using System.Runtime.InteropServices;
-using Excel = Microsoft.Office.Interop.Excel;
 
 namespace KeywordDriven.Utils
 {
     public class ExcelManager
     {
-        private static Excel.Application ExcelApp;
-        private static Excel.Workbook ExcelWBook;
-        private static Excel.Worksheet ExcelWSheet;
+        private static XLWorkbook excelWorkbook;
+        private static string workbookPath;
 
-        public static void SetExcel(string path,string fileName)
+        public static void SetExcel(string path, string fileName)
         {
-            Excel.Application excelApp = null;
-            Excel.Workbook excelWBook = null;
+            if (string.IsNullOrWhiteSpace(path))
+                throw new ArgumentException("Excel directory cannot be empty.", nameof(path));
+            if (string.IsNullOrWhiteSpace(fileName))
+                throw new ArgumentException("Excel file name cannot be empty.", nameof(fileName));
 
-            try
-            {
-                if (ExcelApp == null)
-                    ExcelApp = new Excel.Application { Visible = false };
+            string normalizedFileName = Path.HasExtension(fileName)
+                ? fileName
+                : $"{fileName}.xlsx";
+            string fullPath = Path.GetFullPath(Path.Combine(path, normalizedFileName));
 
-                // Check if the specific workbook is already open
-                bool isAlreadyOpen = false;
-                if (excelApp.Workbooks.Count > 0)
-                {
-                    foreach (Excel.Workbook wb in excelApp.Workbooks)
-                    {
-                        // Compare full paths to ensure it's the exact same file
-                        if (string.Equals(wb.FullName, Path.GetFullPath(path), StringComparison.OrdinalIgnoreCase))
-                        {
-                            excelWBook = wb;
-                            isAlreadyOpen = true;
-                            Console.WriteLine("Workbook is already open. Using existing instance.");
-                            break;
-                        }
-                    }
-                }
+            if (excelWorkbook != null
+                && string.Equals(workbookPath, fullPath, StringComparison.OrdinalIgnoreCase))
+                return;
 
-                // If not open, open it now
-                if (!isAlreadyOpen)
-                {
-                    excelWBook = excelApp.Workbooks.Open(Path.Combine(path, fileName + ".xlsx"));
-                }
+            if (excelWorkbook != null)
+                SaveCloseExcel();
 
-                ExcelApp = excelApp;
-                ExcelWBook = excelWBook;
-            }
-            catch (Exception ex)
-            {
-                throw new Exception($"Error handling Excel file: {ex.Message}");
-            }
+            if (!File.Exists(fullPath))
+                throw new FileNotFoundException($"Excel workbook was not found: {fullPath}", fullPath);
+
+            excelWorkbook = new XLWorkbook(fullPath);
+            workbookPath = fullPath;
         }
 
         public static void SaveCloseExcel()
         {
-            ExcelWBook.Save();
-            CloseExcel();
+            if (excelWorkbook == null)
+                return;
+
+            try
+            {
+                excelWorkbook.Save();
+            }
+            finally
+            {
+                CloseExcel();
+            }
         }
 
         public static void CloseExcel()
         {
-            if (ExcelWBook != null)
-            {
-                ExcelWBook.Close(false);
-            }
-            if (ExcelApp != null)
-            {
-                ExcelApp.Quit();
-            }
-
-            // Force Garbage Collection to ensure the process actually exits
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
+            excelWorkbook?.Dispose();
+            excelWorkbook = null;
+            workbookPath = null;
         }
 
-        internal static string GetCellData(int rowNum, int colNum, String sheetName)
+        internal static string GetCellData(int rowNum, int colNum, string sheetName)
         {
-            ExcelWSheet = ExcelWBook.Sheets[sheetName] as Excel.Worksheet;
-            string cellValue = (ExcelWSheet.Cells[rowNum + 1, colNum + 1] as Excel.Range).Text as string;
-            return cellValue;
+            IXLWorksheet worksheet = GetWorksheet(sheetName);
+            return worksheet.Cell(rowNum + 1, colNum + 1).GetFormattedString();
         }
 
-        internal static int GetRowCount(String sheetName)
+        internal static int GetRowCount(string sheetName)
         {
-            int number;
-            ExcelWSheet = ExcelWBook.Sheets[sheetName] as Excel.Worksheet;
-            number = ExcelWSheet.UsedRange.Rows.Count + 1;
-            return number;
+            return GetWorksheet(sheetName).LastRowUsed()?.RowNumber() ?? 0;
         }
 
-        internal static int GetRowContains(String testCaseName, int colNum, String sheetName)
+        internal static int GetRowContains(string testCaseName, int colNum, string sheetName)
         {
-            int rowNum = 0;
-            ExcelWSheet = ExcelWBook.Sheets[sheetName] as Excel.Worksheet;
             int rowCount = GetRowCount(sheetName);
-
-            for (; rowNum < rowCount; rowNum++)
+            for (int rowNum = 0; rowNum < rowCount; rowNum++)
             {
-                if (GetCellData(rowNum, colNum, sheetName).Equals(testCaseName))
-                {
-                    break;
-                }
+                if (string.Equals(
+                    GetCellData(rowNum, colNum, sheetName),
+                    testCaseName,
+                    StringComparison.Ordinal))
+                    return rowNum;
             }
-            return rowNum;
+
+            return rowCount;
         }
 
-        internal static string GetKeyValue(String KeyName, int colNum, String sheetName)
+        internal static string GetKeyValue(string keyName, int colNum, string sheetName)
         {
-            int rowNum = 0;
-            ExcelWSheet = ExcelWBook.Sheets[sheetName] as Excel.Worksheet;
             int rowCount = GetRowCount(sheetName);
-
-            for (; rowNum < rowCount; rowNum++)
+            for (int rowNum = 0; rowNum < rowCount; rowNum++)
             {
-                if (GetCellData(rowNum, colNum, sheetName).Equals(KeyName))
-                {
-                    break;
-                }
+                if (string.Equals(
+                    GetCellData(rowNum, colNum, sheetName),
+                    keyName,
+                    StringComparison.Ordinal))
+                    return GetCellData(rowNum, colNum + 1, sheetName);
             }
-            return GetCellData(rowNum, colNum + 1, sheetName);
+
+            return string.Empty;
         }
 
-        internal static int GetTestStepsCount(String sheetName, String testCaseID, int testCaseStart)
+        internal static int GetTestStepsCount(string sheetName, string testCaseID, int testCaseStart)
         {
-            for (int i = testCaseStart; i <= ExcelManager.GetRowCount(sheetName); i++)
+            int rowCount = GetRowCount(sheetName);
+            for (int rowNum = testCaseStart; rowNum <= rowCount; rowNum++)
             {
-                if (!testCaseID.Equals(ExcelManager.GetCellData(i, ExcelSetting.Col_TestSteps_TestCaseID, sheetName)))
-                {
-                    int number = i;
-                    return number;
-                }
+                if (!string.Equals(
+                    testCaseID,
+                    GetCellData(rowNum, ExcelSetting.Col_TestSteps_TestCaseID, sheetName),
+                    StringComparison.Ordinal))
+                    return rowNum;
             }
-            ExcelWSheet = ExcelWBook.Sheets[sheetName] as Excel.Worksheet;
-            int number1 = ExcelWSheet.UsedRange.Rows.Count + 1;
-            return number1;
+
+            return rowCount;
         }
 
-        internal static void SetCellData(String Result, int rowNum, int colNum, String sheetName)
+        internal static void SetCellData(string result, int rowNum, int colNum, string sheetName)
         {
-            ExcelWSheet = ExcelWBook.Sheets[sheetName] as Excel.Worksheet;
-            (ExcelWSheet.Cells[rowNum + 1, colNum + 1] as Excel.Range).Value = Result;
+            GetWorksheet(sheetName).Cell(rowNum + 1, colNum + 1).Value = result ?? string.Empty;
+        }
+
+        private static IXLWorksheet GetWorksheet(string sheetName)
+        {
+            if (excelWorkbook == null)
+                throw new InvalidOperationException("No Excel workbook is open. Call SetExcel first.");
+            if (string.IsNullOrWhiteSpace(sheetName))
+                throw new ArgumentException("Worksheet name cannot be empty.", nameof(sheetName));
+
+            return excelWorkbook.Worksheet(sheetName);
         }
     }
 }

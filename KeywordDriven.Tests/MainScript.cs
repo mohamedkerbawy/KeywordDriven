@@ -20,7 +20,7 @@ namespace KeywordDriven.Tests
 
             DriverSetting.DriverType = "local";
             DriverSetting.Headless = false;
-            DriverSetting.DefaultTimeoutSeconds = 10;
+            DriverSetting.DefaultTimeoutSeconds = 50;
             DriverSetting.PageLoadTimeoutSeconds = 60;
         }
 

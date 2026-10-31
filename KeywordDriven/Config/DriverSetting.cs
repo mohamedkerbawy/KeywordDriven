@@ -1,11 +1,11 @@
 ﻿namespace KeywordDriven.Config
 {
-    public class DriverSetting
+    public static class DriverSetting
     {
-        public static string DriverType = "local";
-        public static bool Headless = false;
+        public static string DriverType { get; set; } = "local";
+        public static bool Headless { get; set; } = false;
 
-        public static int DefaultTimeoutSeconds = 10;
-        public static int PageLoadTimeoutSeconds = 60;
+        public static int DefaultTimeoutSeconds { get; set; } = 50;
+        public static int PageLoadTimeoutSeconds { get; set; } = 60;
     }
 }

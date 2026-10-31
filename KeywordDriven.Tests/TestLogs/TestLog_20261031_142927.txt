@@ -1,0 +1,24 @@
+[2026-10-31 14:29:27] [INFO   ] Start TestCase TS1
+[2026-10-31 14:29:27] [INFO   ] OpenBrowser | Browser: Chrome
+[2026-10-31 14:29:30] [INFO   ] OpenBrowser launched successfully | Browser: Chrome | Headless: False
+[2026-10-31 14:29:30] [INFO   ] NavigateToUrl | URL: https://demo.playwright.dev/todomvc/
+[2026-10-31 14:29:31] [INFO   ] NavigateToUrl | URL: https://demo.playwright.dev/todomvc/ | Title: React • TodoMVC
+[2026-10-31 14:29:31] [INFO   ] TypeText "Test Automation" on "Home_xpath_txt_searchbox"
+[2026-10-31 14:29:31] [INFO   ] PressKey "Enter" on "Home_xpath_txt_searchbox"
+[2026-10-31 14:29:32] [INFO   ] AssertElementContainsText: Home_xpath_radiovalue_itemoption
+[2026-10-31 14:29:32] [PASS   ] AssertElementContainsText: passed
+[2026-10-31 14:29:32] [INFO   ] CloseBrowser | Close current browser window
+[2026-10-31 14:29:32] [PASS   ] End TestCase TS1, Result: PASS
+[2026-10-31 14:29:32] [INFO   ] Start TestCase TS2
+[2026-10-31 14:29:32] [INFO   ] OpenBrowser | Browser: Chrome
+[2026-10-31 14:29:35] [INFO   ] OpenBrowser launched successfully | Browser: Chrome | Headless: False
+[2026-10-31 14:29:35] [INFO   ] NavigateToUrl | URL: https://demo.playwright.dev/todomvc/
+[2026-10-31 14:29:37] [INFO   ] NavigateToUrl | URL: https://demo.playwright.dev/todomvc/ | Title: React • TodoMVC
+[2026-10-31 14:29:37] [INFO   ] TypeText "Test Automation" on "Home_xpath_txt_searchbox"
+[2026-10-31 14:29:37] [INFO   ] PressKey "Enter" on "Home_xpath_txt_searchbox"
+[2026-10-31 14:29:37] [INFO   ] Click "" on "Home_xpath_radiobtn_itemoption"
+[2026-10-31 14:29:38] [INFO   ] WaitSeconds | Seconds: 5
+[2026-10-31 14:29:43] [INFO   ] AssertElementContainsText: Home_xpath_btn_clearcompleted
+[2026-10-31 14:29:43] [PASS   ] AssertElementContainsText: passed
+[2026-10-31 14:29:43] [INFO   ] CloseBrowser | Close current browser window
+[2026-10-31 14:29:44] [PASS   ] End TestCase TS2, Result: PASS

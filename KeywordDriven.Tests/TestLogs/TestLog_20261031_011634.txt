@@ -1,0 +1,15 @@
+[2026-10-31 01:16:34] [INFO   ] Start TestCase TS1
+[2026-10-31 01:16:34] [INFO   ] OpenBrowser | Browser: Chrome
+[2026-10-31 01:16:37] [INFO   ] OpenBrowser launched successfully | Browser: Chrome | Headless: False
+[2026-10-31 01:16:37] [INFO   ] NavigateToUrl | URL: https://www.google.com
+[2026-10-31 01:16:40] [INFO   ] NavigateToUrl | URL: https://www.google.com | Title: Google
+[2026-10-31 01:16:40] [INFO   ] TypeText "Microsoft Surface 7" on "Home_name_txt_searchbox"
+[2026-10-31 01:16:40] [INFO   ] Click "" on "Home_name_btn_googlesearch"
+[2026-10-31 01:16:41] [INFO   ] WaitSeconds | Seconds: 5
+[2026-10-31 01:16:46] [INFO   ] VerifyPageHaveTitle: microsoft surface 7 - Google Search
+[2026-10-31 01:16:46] [FAIL   ] VerifyPageHaveTitle: verification failed (microsoft surface 7 - Google Search)
+[2026-10-31 01:16:46] [INFO   ] AssertElementHaveText: Home_name_txt_searchbox
+[2026-10-31 01:16:46] [FAIL   ] AssertElementHaveText: assertion failed (Home_name_txt_searchbox)
+[2026-10-31 01:16:46] [INFO   ] CloseBrowser | Close current browser window
+[2026-10-31 01:16:46] [FAIL   ] End TestCase TS1, Result: FAIL
+[2026-10-31 01:16:46] [FAIL   ] End TestCase TS1, Result: FAIL

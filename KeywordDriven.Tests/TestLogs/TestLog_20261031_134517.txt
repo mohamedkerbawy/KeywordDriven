@@ -1,0 +1,23 @@
+[2026-10-31 13:45:17] [INFO   ] Start TestCase TS1
+[2026-10-31 13:45:17] [INFO   ] OpenBrowser | Browser: Chrome
+[2026-10-31 13:45:21] [INFO   ] OpenBrowser launched successfully | Browser: Chrome | Headless: False
+[2026-10-31 13:45:21] [INFO   ] NavigateToUrl | URL: https://demo.playwright.dev/todomvc/
+[2026-10-31 13:45:23] [INFO   ] NavigateToUrl | URL: https://demo.playwright.dev/todomvc/ | Title: React • TodoMVC
+[2026-10-31 13:45:23] [INFO   ] TypeText "Test Automation" on "Home_xpath_txt_searchbox"
+[2026-10-31 13:45:24] [INFO   ] PressKey "Enter" on "Home_xpath_txt_searchbox"
+[2026-10-31 13:45:24] [INFO   ] AssertElementContainsText: Home_xpath_radiovalue_itemoption
+[2026-10-31 13:45:24] [PASS   ] AssertElementContainsText: passed
+[2026-10-31 13:45:24] [INFO   ] CloseBrowser | Close current browser window
+[2026-10-31 13:45:25] [PASS   ] End TestCase TS1, Result: PASS
+[2026-10-31 13:45:25] [INFO   ] Start TestCase TS2
+[2026-10-31 13:45:25] [INFO   ] OpenBrowser | Browser: Chrome
+[2026-10-31 13:45:28] [INFO   ] OpenBrowser launched successfully | Browser: Chrome | Headless: False
+[2026-10-31 13:45:28] [INFO   ] NavigateToUrl | URL: https://demo.playwright.dev/todomvc/
+[2026-10-31 13:45:29] [INFO   ] NavigateToUrl | URL: https://demo.playwright.dev/todomvc/ | Title: React • TodoMVC
+[2026-10-31 13:45:29] [INFO   ] TypeText "Test Automation" on "Home_xpath_txt_searchbox"
+[2026-10-31 13:45:29] [INFO   ] PressKey "Enter" on "Home_xpath_txt_searchbox"
+[2026-10-31 13:45:29] [INFO   ] Click "" on "Home_xpath_radiobtn_itemoption"
+[2026-10-31 13:46:20] [ERROR  ] Click | Exception: Timed out after 50 seconds
+[2026-10-31 13:46:20] [INFO   ] CloseBrowser | Close current browser window
+[2026-10-31 13:46:21] [ERROR  ] End TestCase TS2, Result: ERROR
+[2026-10-31 13:46:21] [ERROR  ] End TestCase TS2, Result: ERROR

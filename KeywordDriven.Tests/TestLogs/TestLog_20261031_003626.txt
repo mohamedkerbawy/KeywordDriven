@@ -1,0 +1,7 @@
+[2026-10-31 00:36:26] [INFO   ] Start TestCase TS1
+[2026-10-31 00:36:26] [INFO   ] OpenBrowser | Browser: Chrome
+[2026-10-31 00:36:29] [INFO   ] OpenBrowser launched successfully | Browser: Chrome | Headless: False
+[2026-10-31 00:36:29] [INFO   ] NavigateToURL | URL: https://www.google.com
+[2026-10-31 00:36:30] [INFO   ] NavigateToUrl | URL: https://www.google.com | Title: Google
+[2026-10-31 00:36:30] [INFO   ] CloseBrowser | Close current browser window
+[2026-10-31 00:36:31] [PASS   ] End TestCase TS1, Result: PASS

@@ -14,11 +14,6 @@ namespace KeywordDriven.ActionKeywords
 {
     internal class Locators
     {
-        /// <summary>
-        /// Maps locator type with locator value and return locator By object.
-        /// <param name="obj"></param>
-        /// <returns></returns>
-        /// <exception cref="Exception"></exception>
         internal static By GetLocator(string obj)
         {
             if (string.IsNullOrWhiteSpace(obj))
@@ -68,11 +63,6 @@ namespace KeywordDriven.ActionKeywords
             return $"concat({string.Join(", \"'\", ", parts.Select(part => $"'{part}'"))})";
         }
 
-        /// <summary>
-        /// Standard click Element.
-        /// </summary>
-        /// <param name="by"></param>
-        /// <returns></returns>
         internal static bool ClickByDriver(IWebDriver driver, By locator)
         {
             try
@@ -88,11 +78,6 @@ namespace KeywordDriven.ActionKeywords
             }
         }
 
-        /// <summary>
-        /// Clicks element using JavaScript.
-        /// </summary>
-        /// <param name="by"></param>
-        /// <returns></returns>
         internal static bool ClickByJavascript(IWebDriver driver, By locator)
         {
             try
@@ -109,11 +94,6 @@ namespace KeywordDriven.ActionKeywords
             }
         }
 
-        /// <summary>
-        /// Clicks element using Actions (move to element then click).
-        /// Use for custom dropdowns, menus, tooltips, or canvas elements.
-        /// </summary>
-        /// <param name="by"></param>
         internal static void ClickByActions(IWebDriver driver, By locator)
         {
             new Actions(driver)
@@ -122,10 +102,6 @@ namespace KeywordDriven.ActionKeywords
                 .Perform();
         }
 
-        /// <summary>
-        /// Double clicks element using Actions.
-        /// Use for elements that require double click to trigger.
-        /// </summary>        
         internal static void DoubleClick(IWebDriver driver, By locator)
         {
             new Actions(driver)
@@ -133,10 +109,6 @@ namespace KeywordDriven.ActionKeywords
                 .Perform();
         }
 
-        /// <summary>
-        /// Right clicks element using Actions.
-        /// Use to open context menus.
-        /// </summary>
         internal static void RightClick(IWebDriver driver, By locator)
         {
             new Actions(driver)
@@ -144,13 +116,6 @@ namespace KeywordDriven.ActionKeywords
                 .Perform();
         }
 
-        /// <summary>
-        /// Inputs text into element using standard SendKeys method. 
-        /// </summary>
-        /// <param name="driver"></param>
-        /// <param name="locator"></param>
-        /// <param name="data"></param>
-        /// <returns></returns>
         internal static bool InputByDriver(IWebDriver driver, By locator, string data)
         {
             try
@@ -166,13 +131,6 @@ namespace KeywordDriven.ActionKeywords
             }
         }
 
-        /// <summary>
-        /// Inputs text into element using JavaScript. Use when SendKeys doesn't work (e.g. due to overlays, custom controls, or performance issues).
-        /// </summary>
-        /// <param name="driver"></param>
-        /// <param name="locator"></param>
-        /// <param name="data"></param>
-        /// <returns></returns>
         internal static bool InputByJavascript(IWebDriver driver, By locator, string data, bool append = false)
         {
             try
@@ -204,66 +162,32 @@ namespace KeywordDriven.ActionKeywords
             }
         }
 
-        /// <summary>
-        /// Selects option by visible text.
-        /// </summary>
-        /// <param name="driver"></param>
-        /// <param name="locator"></param>
-        /// <param name="text"></param>
-        /// <returns></returns>
         internal static void SelectByText(IWebDriver driver, By locator, string text)
         {
             new SelectElement(driver.FindElement(locator)).SelectByText(text);
         }
 
-        /// <summary>
-        /// Selects option by value attribute.
-        /// </summary>
-        /// <param name="driver"></param>
-        /// <param name="locator"></param>
-        /// <param name="value"></param>
-        /// <returns></returns>
         internal static void SelectByValue(IWebDriver driver, By locator, string value)
         {
             new SelectElement(driver.FindElement(locator)).SelectByValue(value);
         }
 
-        /// <summary>
-        /// Selects option by its index position (zero-based).
-        /// e.g. index 0 = first option, index 1 = second option
-        /// </summary>
         internal static void SelectByIndex(IWebDriver driver, By locator, int index)
         {
             new SelectElement(driver.FindElement(locator)).SelectByIndex(index);
         }
 
-        /// <summary>
-        /// Selects the first option in the dropdown.
-        /// </summary>
-        /// <param name="driver"></param>
-        /// <param name="locator"></param>
         internal static void SelectFirstOption(IWebDriver driver, By locator)
         {
             new SelectElement(driver.FindElement(locator)).SelectByIndex(0);
         }
 
-        /// <summary>
-        /// Selects the last option in the dropdown.
-        /// </summary>
-        /// <param name="driver"></param>
-        /// <param name="locator"></param>
         internal static void SelectLastOption(IWebDriver driver, By locator)
         {
             var select = new SelectElement(driver.FindElement(locator));
             select.SelectByIndex(select.Options.Count - 1);
         }
 
-        /// <summary>
-        /// Selects multiple options by visible text (for multi-select dropdowns).
-        /// </summary>
-        /// <param name="driver"></param>
-        /// <param name="locator"></param>
-        /// <param name="texts"></param>
         internal static void SelectMultipleByText(IWebDriver driver, By locator, IEnumerable<string> texts)
         {
             ArgumentNullException.ThrowIfNull(texts);
@@ -275,21 +199,11 @@ namespace KeywordDriven.ActionKeywords
                 select.SelectByText(text);
         }
 
-        /// <summary>
-        /// Deselects all selected options (for multi-select dropdowns).
-        /// </summary>
-        /// <param name="driver"></param>
-        /// <param name="locator"></param>
         internal static void DeselectAll(IWebDriver driver, By locator)
         {
             new SelectElement(driver.FindElement(locator)).DeselectAll();
         }
 
-        /// <summary>
-        /// Checks the checkbox if it is not already checked.
-        /// </summary>
-        /// <param name="driver"></param>
-        /// <param name="locator"></param>
         internal static void CheckCheckbox(IWebDriver driver, By locator)
         {
             var element = driver.FindElement(locator);
@@ -297,11 +211,6 @@ namespace KeywordDriven.ActionKeywords
                 element.Click();
         }
 
-        /// <summary>
-        /// Unchecks the checkbox if it is not already unchecked.
-        /// </summary>
-        /// <param name="driver"></param>
-        /// <param name="locator"></param>
         internal static void UnCheckCheckbox(IWebDriver driver, By locator)
         {
             var element = driver.FindElement(locator);
@@ -309,11 +218,6 @@ namespace KeywordDriven.ActionKeywords
                 element.Click();
         }
 
-        /// <summary>
-        /// Selects a radio button if it is not already selected.
-        /// </summary>
-        /// <param name="driver"></param>
-        /// <param name="locator"></param>
         internal static void SelectRadioButton(IWebDriver driver, By locator)
         {
             var element = driver.FindElement(locator);
@@ -352,13 +256,6 @@ namespace KeywordDriven.ActionKeywords
             };
         }
 
-        /// <summary>
-        /// Selects a radio button from a group by its visible label text.
-        /// </summary>
-        /// <param name="driver"></param>
-        /// <param name="groupLocator"></param>
-        /// <param name="labelText"></param>
-        /// <exception cref="NoSuchElementException"></exception>
         internal static void SelectRadioButtonByText(IWebDriver driver, By groupLocator, string labelText)
         {
             var radios = driver.FindElements(groupLocator).Where(IsRadioButton).ToList();
@@ -394,13 +291,6 @@ namespace KeywordDriven.ActionKeywords
                 .FirstOrDefault()?.Text.Trim() ?? string.Empty;
         }
 
-        /// <summary>
-        /// Selects a radio button from a group by its value attribute.
-        /// </summary>
-        /// <param name="driver"></param>
-        /// <param name="groupLocator"></param>
-        /// <param name="value"></param>
-        /// <exception cref="NoSuchElementException"></exception>
         internal static void SelectRadioButtonByValue(IWebDriver driver, By groupLocator, string value)
         {
             var radios = driver.FindElements(groupLocator).Where(IsRadioButton).ToList();
@@ -419,13 +309,6 @@ namespace KeywordDriven.ActionKeywords
                 match.Click();
         }
 
-        /// <summary>
-        /// Selects a radio button from a group by its index position (zero-based).
-        /// </summary>
-        /// <param name="driver"></param>
-        /// <param name="groupLocator"></param>
-        /// <param name="index"></param>
-        /// <exception cref="ArgumentOutOfRangeException"></exception>
         internal static void SelectRadioButtonByIndex(IWebDriver driver, By groupLocator, int index)
         {
             var radios = driver.FindElements(groupLocator).Where(IsRadioButton).ToList();
@@ -443,12 +326,6 @@ namespace KeywordDriven.ActionKeywords
                 target.Click();
         }
 
-        /// <summary>
-        /// Clears text from input field using standard Clear() method.
-        /// </summary>
-        /// <param name="driver"></param>
-        /// <param name="locator"></param>
-        /// <returns></returns>
         internal static bool ClearByDriver(IWebDriver driver, By locator)
         {
             try
@@ -464,12 +341,6 @@ namespace KeywordDriven.ActionKeywords
             }
         }
 
-        /// <summary>
-        /// Clears text from input field using JavaScript.
-        /// </summary>
-        /// <param name="driver"></param>
-        /// <param name="locator"></param>
-        /// <returns></returns>
         internal static bool ClearByJavascript(IWebDriver driver, By locator)
         {
             try
@@ -496,13 +367,6 @@ namespace KeywordDriven.ActionKeywords
             }
         }
 
-        /// <summary>
-        /// Presses specified key on the element. Supports special keys like Enter, Tab, Escape, etc.
-        /// </summary>
-        /// <param name="driver"></param>
-        /// <param name="locator"></param>
-        /// <param name="key"></param>
-        /// <exception cref="Exception"></exception>
         internal static void PressKey(IWebDriver driver, By locator, string key)
         {
             if (string.IsNullOrWhiteSpace(key))
@@ -534,13 +398,6 @@ namespace KeywordDriven.ActionKeywords
             driver.FindElement(locator).SendKeys(keyToSend);
         }
 
-        /// <summary>
-        /// Uploads a file by sending the file path to an input[type='file'] element.
-        /// </summary>
-        /// <param name="driver"></param>
-        /// <param name="locator"></param>
-        /// <param name="filePath"></param>
-        /// <exception cref="Exception"></exception>
         internal static void UploadFile(IWebDriver driver, By locator, string filePath)
         {
             try
@@ -618,13 +475,6 @@ namespace KeywordDriven.ActionKeywords
             }
         }
 
-        /// <summary>
-        /// Uploads multiple files to a multi-file input element.
-        /// </summary>
-        /// <param name="driver"></param>
-        /// <param name="locator"></param>
-        /// <param name="filePaths"></param>
-        /// <exception cref="Exception"></exception>
         internal static void UploadMultipleFiles(IWebDriver driver, By locator, string[] filePaths)
         {
             try
@@ -684,7 +534,7 @@ namespace KeywordDriven.ActionKeywords
 
             try
             {
-                operation(Locators.GetLocator(obj), data);
+                operation(GetLocator(obj), data);
                 DriverScript.outcome = (int)Outcome.Pass;
             }
             catch (Exception exception)
