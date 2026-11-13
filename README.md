@@ -62,9 +62,9 @@ The default workbook is `TestCases.xlsx` and uses these worksheets:
 | `TestCases` | Test case ID, title, description, run mode (`Yes` or `No`), and result |
 | `TestSteps` | Test case ID, step number, description, page object, action keyword, test data, and result |
 | `Locators` | Page object key and its locator value |
-| `Settings` | Framework settings |
+| `Keywords Catalog` | Keywords Catalog for referance includes Drivers, Locators, Waits, Assertions and Verifications Action Keywords |
 
-`TestSteps` columns are read in this order: `TestCaseID`, `StepNo`, `Description`, `PageObject`, `ActionKeyword`, `TestData`, `Result`.
+`TestSteps` columns are read in this order: `TestCaseID`, `StepNo`, `Description`, `ActionKeyword`, `PageObject`, `TestData`, `Result`.
 
 Every public keyword has the signature `static void KeywordName(string obj, string data)`. The driver supplies:
 
@@ -73,13 +73,13 @@ Every public keyword has the signature `static void KeywordName(string obj, stri
 
 Example test steps (the `Locators` sheet must contain the referenced page object keys):
 
-| TestCaseID | StepNo | Description | PageObject | ActionKeyword | TestData |
+| TestCaseID | StepNo | Description | ActionKeyword| PageObject | TestData |
 |---|---:|---|---|---|---|
-| TC01 | 1 | Open Chrome | | `OpenBrowser` | `Chrome` |
-| TC01 | 2 | Open the login page | | `NavigateToUrl` | `https://example.com/login` |
-| TC01 | 3 | Enter the user name | `UserName_id` | `TypeText` | `sample-user` |
-| TC01 | 4 | Submit the form | `LoginButton_id` | `Click` | |
-| TC01 | 5 | Check the page title | | `VerifyPageHaveTitle` | `Welcome` |
+| TC01 | 1 | Open Chrome | `OpenBrowser` | | `Chrome` |
+| TC01 | 2 | Open the login page | `NavigateToUrl` | | `https://example.com/login` |
+| TC01 | 3 | Enter the user name | `TypeText` | `UserName_id` | `sample-user` |
+| TC01 | 4 | Submit the form | `Click` | `LoginButton_id` | |
+| TC01 | 5 | Check the page title | `VerifyPageHaveTitle` | | `Welcome` |
 
 ## Keyword catalog
 
