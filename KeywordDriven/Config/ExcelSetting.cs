@@ -3,7 +3,6 @@
     internal class ExcelSetting
     {
         //Excel Workbook Default Worksheets
-        internal static string Sheet_Settings { get; }= "Settings";
         internal static string Sheet_Locators { get; }= "Locators";
         internal static string Sheet_TestCases { get; }= "TestCases";
         internal static string Sheet_TestSteps { get; }= "TestSteps";
@@ -23,8 +22,8 @@
         internal static int Col_TestSteps_TestCaseID { get; }= 0;
         internal static int Col_TestSteps_StepNo { get; }= 1;
         internal static int Col_TestSteps_Description { get; }= 2;
-        internal static int Col_TestSteps_PageObject { get; }= 3;
-        internal static int Col_TestSteps_ActionKeyword { get; }= 4;
+        internal static int Col_TestSteps_ActionKeyword { get; } = 3;
+        internal static int Col_TestSteps_PageObject { get; }= 4;
         internal static int Col_TestSteps_TestData { get; }= 5;
         internal static int Col_TestSteps_Result { get; }= 6;
     }

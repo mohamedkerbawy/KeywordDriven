@@ -5,7 +5,9 @@ VisualStudioVersion = 17.14.36623.8
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KeywordDriven", "KeywordDriven\KeywordDriven.csproj", "{6E393F9F-568F-4C9C-8AAC-942790244D5D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KeywordDriven.Tests", "KeywordDriven.Tests\KeywordDriven.Tests.csproj", "{34FDBBFA-C2B1-4E99-A622-B9D6EEB8C4C1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KeywordDriven.TestRunner", "KeywordDriven.TestRunner\KeywordDriven.TestRunner.csproj", "{34FDBBFA-C2B1-4E99-A622-B9D6EEB8C4C1}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KeywordDriven.UnitTests", "KeywordDriven.UnitTests\KeywordDriven.UnitTests.csproj", "{C4565AE4-D8DC-4E86-9DC1-D9E1F552B411}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{34FDBBFA-C2B1-4E99-A622-B9D6EEB8C4C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{34FDBBFA-C2B1-4E99-A622-B9D6EEB8C4C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{34FDBBFA-C2B1-4E99-A622-B9D6EEB8C4C1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C4565AE4-D8DC-4E86-9DC1-D9E1F552B411}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C4565AE4-D8DC-4E86-9DC1-D9E1F552B411}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C4565AE4-D8DC-4E86-9DC1-D9E1F552B411}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C4565AE4-D8DC-4E86-9DC1-D9E1F552B411}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

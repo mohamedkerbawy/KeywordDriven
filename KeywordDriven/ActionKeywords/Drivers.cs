@@ -15,7 +15,7 @@ namespace KeywordDriven.ActionKeywords
 {
     internal static class Drivers
     {
-        internal static IWebDriver driver;
+        [ThreadStatic] internal static IWebDriver driver;
 
         private static IWebDriver OpenChrome()
         {
@@ -47,7 +47,7 @@ namespace KeywordDriven.ActionKeywords
                 options.AddUserProfilePreference("profile.default_content_settings.popups", 0);
 
                 IWebDriver driver = new ChromeDriver(options);
-                Console.WriteLine("Chrome browser launched successfully.");
+                Console.WriteLine("OpenChrome success");
 
                 return driver;
             }
@@ -82,7 +82,7 @@ namespace KeywordDriven.ActionKeywords
                 options.AcceptInsecureCertificates = true;                
 
                 IWebDriver driver = new FirefoxDriver(options);
-                Console.WriteLine("Firefox browser launched successfully.");
+                Console.WriteLine("OpenFirefox success");
                 return driver;
             }
             catch (Exception ex)
@@ -117,7 +117,7 @@ namespace KeywordDriven.ActionKeywords
                 options.AddUserProfilePreference("profile.password_manager_enabled", false);
 
                 IWebDriver driver = new EdgeDriver(options);
-                Console.WriteLine("Edge browser launched successfully.");
+                Console.WriteLine("OpenEdge success");
                 return driver;
             }
             catch (Exception ex)

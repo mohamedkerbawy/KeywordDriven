@@ -292,10 +292,6 @@ namespace KeywordDriven.ActionKeywords
             Assertions.Run(nameof(AssertRadioNotSelected), obj, () => Assertions.AssertElementState(
                 obj, element => Assertions.HasExpectedSelection(element, "radio", selected: false)));
 
-        public static void AssertRadioSeleced(String obj, String data) => AssertRadioSelected(obj, data);
-
-        public static void AssertRadioNotSeleced(String obj, String data) => AssertRadioNotSelected(obj, data);
-
         public static void AssertPageContainsTitle(String obj, String data) =>
             Assertions.Run(nameof(AssertPageContainsTitle), data, () => Assertions.AssertPageMatch(Drivers.driver.Title, data, "contains"));
 
@@ -310,6 +306,9 @@ namespace KeywordDriven.ActionKeywords
 
         public static void AssertPageContainsUrl(String obj, String data) =>
             Assertions.Run(nameof(AssertPageContainsUrl), data, () => Assertions.AssertUrlMatch(data, "contains"));
+
+        public static void AssertPageNotContainsUrl(String obj, String data) =>
+            Assertions.Run(nameof(AssertPageNotContainsUrl), data, () => Assertions.AssertUrlMatch(data, "notcontains"));
 
         public static void AssertPageHaveUrl(String obj, String data) =>
             Assertions.Run(nameof(AssertPageHaveUrl), data, () => Assertions.AssertUrlMatch(data, "exact"));

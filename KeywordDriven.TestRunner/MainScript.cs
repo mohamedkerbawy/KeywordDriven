@@ -5,7 +5,7 @@ using NUnit.Framework;
 using System;
 using System.IO;
 
-namespace KeywordDriven.Tests
+namespace KeywordDriven.TestRunner
 {
     public class MainScript
     {

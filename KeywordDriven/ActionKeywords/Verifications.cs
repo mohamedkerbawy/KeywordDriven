@@ -178,10 +178,6 @@ namespace KeywordDriven.ActionKeywords
                 () => Assertions.AssertElementState(
                     obj, element => Assertions.HasExpectedSelection(element, "radio", selected: false)));
 
-        public static void VerifyRadioSeleced(string obj, string data) => VerifyRadioSelected(obj, data);
-        
-        public static void VerifyRadioNotSeleced(string obj, string data) => VerifyRadioNotSelected(obj, data);
-
         public static void VerifyPageContainsTitle(string obj, string data) =>
             Verifications.Run(nameof(VerifyPageContainsTitle), data,
                 () => Assertions.AssertPageMatch(Drivers.driver.Title, data, "contains"));

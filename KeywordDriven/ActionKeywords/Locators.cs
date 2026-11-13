@@ -535,6 +535,7 @@ namespace KeywordDriven.ActionKeywords
             try
             {
                 operation(GetLocator(obj), data);
+                ExtentReporter.NodeAddScreenShot(ScreenShots.TakeScreenshot(Drivers.driver));
                 DriverScript.outcome = (int)Outcome.Pass;
             }
             catch (Exception exception)
@@ -650,10 +651,6 @@ namespace KeywordDriven.ActionKeywords
 
         public static void UnCheckCheckbox(String obj, String data) =>
             Locators.ExecuteLocatorKeyword(nameof(UnCheckCheckbox), obj, data, (locator, _) =>
-                Locators.UnCheckCheckbox(Drivers.driver, locator));
-
-        public static void UncheckCheckbox(String obj, String data) =>
-            Locators.ExecuteLocatorKeyword(nameof(UncheckCheckbox), obj, data, (locator, _) =>
                 Locators.UnCheckCheckbox(Drivers.driver, locator));
 
         public static void SelectFirstOption(String obj, String data) =>
