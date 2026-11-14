@@ -55,8 +55,10 @@ namespace KeywordDriven.Execution
         }
 
         // This method will execute all the test cases and test steps based on the run mode value in the TestCases sheet
-        public static void Execute_TestCases()
+        public static bool Execute_TestCases()
         {
+            bool allTestCasesPassed = true;
+
             // get the total number of testcases from the TestCases sheet
             int totalTestCases = ExcelManager.GetRowCount(ExcelSetting.Sheet_TestCases);
 
@@ -75,7 +77,7 @@ namespace KeywordDriven.Execution
                 {
                     Log.StartTestCase(testCaseID);
                     ExtentReporter.CreateTest(testCaseID + "_" + testCaseTitle, testCaseDesc);
-                    ExtentReporter.StartTestCase(testCaseID + "_" + testCaseTitle);
+                    ExtentReporter.StartTestCase(testCaseID);
 
                     //get the first and last test step number for the current test case
                     testStep = ExcelManager.GetRowContains(testCaseID, ExcelSetting.Col_TestSteps_TestCaseID, ExcelSetting.Sheet_TestSteps);
@@ -98,26 +100,8 @@ namespace KeywordDriven.Execution
                         //call the method to execute the action keyword for the current test step
                         Execute_Actions();
 
-                        //check The Fail results for the current test step and set the overall test case result as Fail if any test step has Fail result
-                        if (outcome == (int)Outcome.Fail)
-                        {
-                            ExcelManager.SetCellData(Outcome.Fail.ToString(), iTestcase, ExcelSetting.Col_TestCases_Result, ExcelSetting.Sheet_TestCases);
-
-                            Log.EndTestCase(outcome,testCaseID);
-                            ExtentReporter.Error($"TestCase {testCaseID}_{testCaseTitle} {Outcome.Fail.ToString()}");
-                            ExtentReporter.EndTestCase(outcome, testCaseID + "_" + testCaseTitle);
+                        if (outcome == (int)Outcome.Fail || outcome == (int)Outcome.Error)
                             break;
-                        }
-                        //check The Error results for the current test step and set the overall test case result as Error if any test step has Error result
-                        else if (outcome == (int)Outcome.Error)
-                        {
-                            ExcelManager.SetCellData(Outcome.Error.ToString(), iTestcase, ExcelSetting.Col_TestCases_Result, ExcelSetting.Sheet_TestCases);
-
-                            Log.EndTestCase(outcome, testCaseID);
-                            ExtentReporter.Error($"TestCase {testCaseID}_{testCaseTitle} {Outcome.Error.ToString()}");
-                            ExtentReporter.EndTestCase(outcome, testCaseID + "_" + testCaseTitle);
-                            break;
-                        }
                     }
 
                     if (outcome == (int)Outcome.Pass && Verifications.HasFailures)
@@ -134,8 +118,7 @@ namespace KeywordDriven.Execution
                         ExcelManager.SetCellData(Outcome.Pass.ToString(), iTestcase, ExcelSetting.Col_TestCases_Result, ExcelSetting.Sheet_TestCases);
 
                         Log.EndTestCase(outcome, testCaseID);
-                        ExtentReporter.Pass($"TestCase {testCaseID}_{testCaseTitle} {Outcome.Pass.ToString()}");
-                        ExtentReporter.EndTestCase(outcome, testCaseID + "_" + testCaseTitle);
+                        ExtentReporter.EndTestCase(outcome, testCaseID);
                     }
                     //check if any results is Fail for the current test case and set the overall test case result as Fail
                     else if (outcome == (int)Outcome.Fail)
@@ -143,8 +126,7 @@ namespace KeywordDriven.Execution
                         ExcelManager.SetCellData(Outcome.Fail.ToString(), iTestcase, ExcelSetting.Col_TestCases_Result, ExcelSetting.Sheet_TestCases);
 
                         Log.EndTestCase(outcome, testCaseID);
-                        ExtentReporter.Fail($"TestCase {testCaseID}_{testCaseTitle} {Outcome.Fail.ToString()}");
-                        ExtentReporter.EndTestCase(outcome, testCaseID + "_" + testCaseTitle);
+                        ExtentReporter.EndTestCase(outcome, testCaseID);
                     }
                     //check if any results is Error for the current test case and set the overall test case result as Error
                     else if (outcome == (int)Outcome.Error)
@@ -152,11 +134,15 @@ namespace KeywordDriven.Execution
                         ExcelManager.SetCellData(Outcome.Error.ToString(), iTestcase, ExcelSetting.Col_TestCases_Result, ExcelSetting.Sheet_TestCases);
 
                         Log.EndTestCase(outcome, testCaseID);
-                        ExtentReporter.Error($"TestCase {testCaseID}_{testCaseTitle} {Outcome.Error.ToString()}");
-                        ExtentReporter.EndTestCase(outcome, testCaseID + "_" + testCaseTitle);
+                        ExtentReporter.EndTestCase(outcome, testCaseID);
                     }
+
+                    if (outcome != (int)Outcome.Pass)
+                        allTestCasesPassed = false;
                 }
             }
+
+            return allTestCasesPassed;
         }
 
         // This method will execute the action keyword for the current test step and set the result in the TestSteps sheet based on the outcome of the action keyword execution
@@ -197,14 +183,14 @@ namespace KeywordDriven.Execution
                     ExcelManager.SetCellData(Outcome.Fail.ToString(), testStep, ExcelSetting.Col_TestSteps_Result, ExcelSetting.Sheet_TestSteps);
                     ExtentReporter.Fail(testStepDesc);
 
-                    Keywords.CloseBrowser("", "");
+                    Drivers.CloseBrowserForCleanup();
                 }
                 else if (outcome == (int)Outcome.Error)
                 {
                     ExcelManager.SetCellData(Outcome.Error.ToString(), testStep, ExcelSetting.Col_TestSteps_Result, ExcelSetting.Sheet_TestSteps);
                     ExtentReporter.Error(testStepDesc);
 
-                    Keywords.CloseBrowser("", "");
+                    Drivers.CloseBrowserForCleanup();
                 }
             }
         }

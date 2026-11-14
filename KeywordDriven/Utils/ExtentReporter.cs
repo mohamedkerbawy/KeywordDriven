@@ -84,11 +84,11 @@ namespace KeywordDriven.Utils
         {
             EnsureTestCaseCreated();
             if (outcome == 0)
-                Pass("End TestCase " + sTestCaseName);
+                Pass($"End TestCase {sTestCaseName} | Result: PASS");
             else if (outcome == 1)
-                Fail("End TestCase " + sTestCaseName);
+                Fail($"End TestCase {sTestCaseName} | Result: FAIL");
             else if (outcome == 2)
-                Error("End TestCase " + sTestCaseName);
+                Error($"End TestCase {sTestCaseName} | Result: ERROR");
             else
                 Info("End TestCase " + sTestCaseName);
         }

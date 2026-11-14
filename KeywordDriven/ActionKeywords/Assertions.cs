@@ -162,29 +162,29 @@ namespace KeywordDriven.ActionKeywords
 
         internal static void Run(string keyword, string details, Func<bool> assertion)
         {
-            Log.Info($"{keyword}: {details}");
-            ExtentReporter.NodeInfo($"{keyword}: {details}");
+            Log.Info($"{keyword} | {details}");
+            ExtentReporter.NodeInfo($"{keyword} | {details}");
 
             try
             {
                 if (assertion())
                 {
                     DriverScript.outcome = (int)Outcome.Pass;
-                    Log.Pass($"{keyword}: passed");
-                    ExtentReporter.NodePass($"{keyword}: passed");
+                    Log.Pass($"{keyword} | {details} | PASS");
+                    ExtentReporter.NodePass($"{keyword} | {details} | PASS");
                 }
                 else
                 {
                     DriverScript.outcome = (int)Outcome.Fail;
-                    Log.Fail($"{keyword}: assertion failed ({details})");
-                    ExtentReporter.NodeFail($"{keyword}: assertion failed ({details})");
-                }
+                    Log.Fail($"{keyword} | {details} | FAIL");
+                    ExtentReporter.NodeFail($"{keyword} | {details} | FAIL");
+                } 
             }
             catch (Exception exception)
             {
                 DriverScript.outcome = (int)Outcome.Error;
-                Log.Error($"{keyword}: {exception.Message}");
-                ExtentReporter.NodeError($"{keyword}: {exception.Message}");
+                Log.Error($"{keyword} | Exception: {exception.Message}");
+                ExtentReporter.NodeError($"{keyword} | Exception: {exception.Message}");
             }
         }
     }

@@ -34,7 +34,7 @@ namespace KeywordDriven.Utils
         {
             lock (_setLoggerLock)
             {
-                string logEntry = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{level,-7}] {message}";
+                string logEntry = $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{level,-5}] {message}";
 
                 // Write to Console (for IDE output)
                 Console.WriteLine(logEntry);
@@ -55,11 +55,11 @@ namespace KeywordDriven.Utils
         internal static void EndTestCase(int outcome, String sTestCaseName)
         {
             if (outcome == 0)
-                Pass($"End TestCase {sTestCaseName}, Result: PASS");
+                Pass($"End TestCase {sTestCaseName} | Result: PASS");
             else if (outcome == 1)
-                Fail($"End TestCase {sTestCaseName}, Result: FAIL");
+                Fail($"End TestCase {sTestCaseName} | Result: FAIL");
             else if (outcome == 2)
-                Error($"End TestCase {sTestCaseName}, Result: ERROR");
+                Error($"End TestCase {sTestCaseName} | Result: ERROR");
             else
                 Info($"End TestCase {sTestCaseName}");
         }

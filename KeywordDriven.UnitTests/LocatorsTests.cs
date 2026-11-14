@@ -1,5 +1,7 @@
 using System.Collections.ObjectModel;
 using KeywordDriven.ActionKeywords;
+using KeywordDriven.Config;
+using KeywordDriven.Execution;
 using Moq;
 using OpenQA.Selenium;
 
@@ -123,6 +125,86 @@ public class LocatorsTests : ActionKeywordTestBase
             .Throws(new WebDriverException("click failed"));
 
         Assert.That(Locators.ClickByDriver(driver.Object, By.Id("submit")), Is.False);
+    }
+
+    [Test]
+    public void ExecuteLocatorKeyword_LogsInfoThenPassWithNonEmptyDetails()
+    {
+        CreateLocatorWorkbook(("submit_id", "submit"));
+        var driver = new Mock<IWebDriver>();
+        var screenshotDriver = driver.As<ITakesScreenshot>();
+        screenshotDriver
+            .Setup(item => item.GetScreenshot())
+            .Returns(new Screenshot(Convert.ToBase64String(new byte[] { 1, 2, 3 })));
+        Drivers.driver = driver.Object;
+
+        string screenshotDirectory = PathSetting.Path_ScreenShotsDir;
+        bool screenshotDirectoryExisted = Directory.Exists(screenshotDirectory);
+        HashSet<string> existingScreenshots = screenshotDirectoryExisted
+            ? Directory.GetFiles(screenshotDirectory).ToHashSet(StringComparer.OrdinalIgnoreCase)
+            : new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        TextWriter originalOutput = Console.Out;
+        using var output = new StringWriter();
+
+        try
+        {
+            Console.SetOut(output);
+            Locators.ExecuteLocatorKeyword("Click", "submit_id", "", (_, _) => { });
+        }
+        finally
+        {
+            Console.SetOut(originalOutput);
+            if (Directory.Exists(screenshotDirectory))
+            {
+                foreach (string screenshot in Directory.GetFiles(screenshotDirectory))
+                {
+                    if (!existingScreenshots.Contains(screenshot))
+                        File.Delete(screenshot);
+                }
+
+                if (!screenshotDirectoryExisted && !Directory.EnumerateFileSystemEntries(screenshotDirectory).Any())
+                    Directory.Delete(screenshotDirectory);
+            }
+        }
+
+        string[] logLines = output.ToString()
+            .Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries)
+            .Where(line => line.Contains("[INFO   ]", StringComparison.Ordinal)
+                || line.Contains("[PASS   ]", StringComparison.Ordinal))
+            .ToArray();
+        Assert.That(logLines, Has.Length.EqualTo(2));
+        Assert.That(logLines[0], Does.Contain("[INFO   ] Click | submit_id"));
+        Assert.That(logLines[1], Does.Contain("[PASS   ] Click | submit_id"));
+        Assert.That(logLines.Any(line => line.Contains(" |  | ", StringComparison.Ordinal)), Is.False);
+        Assert.That(DriverScript.outcome, Is.EqualTo((int)Outcome.Pass));
+    }
+
+    [Test]
+    public void ExecuteLocatorKeyword_LogsErrorAndOmitsEmptyObjectAndData()
+    {
+        TextWriter originalOutput = Console.Out;
+        using var output = new StringWriter();
+
+        try
+        {
+            Console.SetOut(output);
+            Locators.ExecuteLocatorKeyword("Click", "", " ", (_, _) => { });
+        }
+        finally
+        {
+            Console.SetOut(originalOutput);
+        }
+
+        string[] logLines = output.ToString()
+            .Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries)
+            .Where(line => line.Contains("[INFO   ]", StringComparison.Ordinal)
+                || line.Contains("[ERROR  ]", StringComparison.Ordinal))
+            .ToArray();
+        Assert.That(logLines, Has.Length.EqualTo(2));
+        Assert.That(logLines[0], Does.Contain("[INFO   ] Click"));
+        Assert.That(logLines[1], Does.Contain("[ERROR  ] Click | Page object name cannot be null or empty."));
+        Assert.That(logLines.Any(line => line.Contains(" |  | ", StringComparison.Ordinal)), Is.False);
+        Assert.That(DriverScript.outcome, Is.EqualTo((int)Outcome.Error));
     }
 
     [Test]

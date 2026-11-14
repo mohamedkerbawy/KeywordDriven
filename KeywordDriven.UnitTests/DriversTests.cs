@@ -1,5 +1,6 @@
 using KeywordDriven.ActionKeywords;
 using KeywordDriven.Config;
+using KeywordDriven.Execution;
 using Moq;
 using OpenQA.Selenium;
 
@@ -90,5 +91,100 @@ public class DriversTests : ActionKeywordTestBase
         Assert.That(
             () => Drivers.SetWindowSize(1280, 0),
             Throws.ArgumentException.With.Message.Contains("must be greater than 0"));
+    }
+
+    [Test]
+    public void ExecuteDriverKeyword_LogsInfoThenPassAndOmitsEmptyDetails()
+    {
+        TextWriter originalOutput = Console.Out;
+        using var output = new StringWriter();
+        Console.SetOut(output);
+        try
+        {
+            Drivers.ExecuteDriverKeyword(
+                "RefreshPage",
+                (string.Empty, " "),
+                () => { });
+        }
+        finally
+        {
+            Console.SetOut(originalOutput);
+        }
+
+        string[] logLines = output.ToString()
+            .Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+        Assert.That(logLines, Has.Length.EqualTo(2));
+        Assert.That(logLines[0], Does.Contain("[INFO   ] RefreshPage"));
+        Assert.That(logLines[1], Does.Contain("[PASS   ] RefreshPage"));
+        Assert.That(logLines.Any(line => line.Contains(" | ", StringComparison.Ordinal)), Is.False);
+        Assert.That(DriverScript.outcome, Is.EqualTo((int)Outcome.Pass));
+    }
+
+    [Test]
+    public void ExecuteDriverKeyword_LogsErrorWithDetailsAndException()
+    {
+        TextWriter originalOutput = Console.Out;
+        using var output = new StringWriter();
+        Console.SetOut(output);
+        try
+        {
+            Drivers.ExecuteDriverKeyword(
+                "SwitchToWindow",
+                ("popup", string.Empty),
+                () => throw new InvalidOperationException("window not found"));
+        }
+        finally
+        {
+            Console.SetOut(originalOutput);
+        }
+
+        string[] logLines = output.ToString()
+            .Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+        Assert.That(logLines, Has.Length.EqualTo(2));
+        Assert.That(logLines[0], Does.Contain("[INFO   ] SwitchToWindow | popup"));
+        Assert.That(logLines[1], Does.Contain("[ERROR  ] SwitchToWindow | popup | window not found"));
+        Assert.That(DriverScript.outcome, Is.EqualTo((int)Outcome.Error));
+    }
+
+    [Test]
+    public void ExecuteDriverKeyword_PreservesExistingFailureWhenCleanupSucceeds()
+    {
+        DriverScript.outcome = (int)Outcome.Fail;
+        TextWriter originalOutput = Console.Out;
+        using var output = new StringWriter();
+
+        try
+        {
+            Console.SetOut(output);
+            Drivers.ExecuteDriverKeyword(
+                "CloseBrowser",
+                (string.Empty, string.Empty),
+                () => { },
+                preserveExistingOutcome: true);
+        }
+        finally
+        {
+            Console.SetOut(originalOutput);
+        }
+
+        string[] logLines = output.ToString()
+            .Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+        Assert.That(logLines, Has.Length.EqualTo(1));
+        Assert.That(logLines[0], Does.Contain("[INFO   ] CloseBrowser"));
+        Assert.That(DriverScript.outcome, Is.EqualTo((int)Outcome.Fail));
+    }
+
+    [Test]
+    public void ExecuteDriverKeyword_PreservesExistingFailureWhenCleanupFails()
+    {
+        DriverScript.outcome = (int)Outcome.Fail;
+
+        Drivers.ExecuteDriverKeyword(
+            "CloseBrowser",
+            (string.Empty, string.Empty),
+            () => throw new InvalidOperationException("cleanup failed"),
+            preserveExistingOutcome: true);
+
+        Assert.That(DriverScript.outcome, Is.EqualTo((int)Outcome.Fail));
     }
 }

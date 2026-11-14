@@ -43,20 +43,20 @@ namespace KeywordDriven.ActionKeywords
                 options.AddUserProfilePreference("credentials_enable_service", false); // Disable save password prompt
                 options.AddUserProfilePreference("profile.password_manager_enabled", false);
 
-                options.AddUserProfilePreference("download.prompt_for_download",false);
+                options.AddUserProfilePreference("download.prompt_for_download", false);
                 options.AddUserProfilePreference("profile.default_content_settings.popups", 0);
 
                 IWebDriver driver = new ChromeDriver(options);
-                Console.WriteLine("OpenChrome success");
+                Console.WriteLine($"OpenChrome success");
 
                 return driver;
             }
             catch (Exception ex)
             {
-                throw new Exception($"OpenChrome failed: {ex.Message}");
+                throw new Exception($"OpenChrome failed | Exception: {ex.Message}");
             }
         }
-        
+
         private static IWebDriver OpenFirefox()
         {
             try
@@ -79,15 +79,15 @@ namespace KeywordDriven.ActionKeywords
                 options.SetPreference("browser.download.folderList", 2);
                 options.SetPreference("browser.helperApps.neverAsk.saveToDisk",
                                       "application/pdf,application/octet-stream");
-                options.AcceptInsecureCertificates = true;                
+                options.AcceptInsecureCertificates = true;
 
                 IWebDriver driver = new FirefoxDriver(options);
-                Console.WriteLine("OpenFirefox success");
+                Console.WriteLine($"OpenFirefox success");
                 return driver;
             }
             catch (Exception ex)
             {
-                throw new Exception($"OpenFirefox failed: {ex.Message}");
+                throw new Exception($"OpenFirefox failed | Exception: {ex.Message}");
             }
         }
 
@@ -117,12 +117,12 @@ namespace KeywordDriven.ActionKeywords
                 options.AddUserProfilePreference("profile.password_manager_enabled", false);
 
                 IWebDriver driver = new EdgeDriver(options);
-                Console.WriteLine("OpenEdge success");
+                Console.WriteLine($"OpenEdge success");
                 return driver;
             }
             catch (Exception ex)
             {
-                throw new Exception($"OpenEdge failed: {ex.Message}");
+                throw new Exception($"OpenEdge failed | Exception: {ex.Message}");
             }
         }
 
@@ -155,10 +155,8 @@ namespace KeywordDriven.ActionKeywords
                     newDriver.Manage().Window.Maximize();
 
                 driver = newDriver;
-                string message = $"OpenBrowser launched successfully | Browser: {browserType} | Headless: {DriverSetting.Headless}";
+                string message = $"OpenBrowser | Browser: {browserType} | Headless: {DriverSetting.Headless}";
                 Console.WriteLine(message);
-                Log.Info(message);
-                ExtentReporter.NodeInfo(message);
                 return driver;
             }
             catch
@@ -180,19 +178,15 @@ namespace KeywordDriven.ActionKeywords
 
                 Console.WriteLine($"MaximizeBrowser | " +
                                   $"Size: {driver.Manage().Window.Size.Width}x{driver.Manage().Window.Size.Height}");
-                Log.Info($"MaximizeBrowser | " +
-                                  $"Size: {driver.Manage().Window.Size.Width}x{driver.Manage().Window.Size.Height}");
-                ExtentReporter.NodeInfo($"MaximizeBrowser | " +
-                                  $"Size: {driver.Manage().Window.Size.Width}x{driver.Manage().Window.Size.Height}");
             }
             catch (InvalidOperationException ex)
             {
-                Console.WriteLine($"MaximizeBrowser | {ex.Message}");
+                Console.WriteLine($"MaximizeBrowser | Exception: {ex.Message}");
                 throw;
             }
             catch (Exception ex)
             {
-                throw new Exception($"MaximizeBrowser failed | {ex.Message}");
+                throw new Exception($"MaximizeBrowser failed | Exception: {ex.Message}");
             }
         }
 
@@ -221,22 +215,20 @@ namespace KeywordDriven.ActionKeywords
                 WaitForDocumentReady();
 
                 Console.WriteLine($"NavigateToUrl | URL: {url} | Title: {driver.Title}");
-                Log.Info($"NavigateToUrl | URL: {url} | Title: {driver.Title}");
-                ExtentReporter.NodeInfo($"NavigateToUrl | URL: {url} | Title: {driver.Title}");
             }
             catch (InvalidOperationException ex)
             {
-                Console.WriteLine($"NavigateToUrl - {ex.Message}");
+                Console.WriteLine($"NavigateToUrl failed | Exception: {ex.Message}");
                 throw;
             }
             catch (ArgumentException ex)
             {
-                Console.WriteLine($"NavigateToUrl - {ex.Message}");
+                Console.WriteLine($"NavigateToUrl failed | Exception: {ex.Message}");
                 throw;
             }
             catch (WebDriverException ex)
             {
-                throw new Exception($"NavigateToUrl failed [{url}]: {ex.Message}");
+                throw new Exception($"NavigateToUrl failed | URL: {url} | Exception: {ex.Message}");
             }
         }
 
@@ -257,17 +249,15 @@ namespace KeywordDriven.ActionKeywords
                 WaitForDocumentReady();
 
                 Console.WriteLine($"RefreshPage | URL: {urlBefore} | Title Before: {titleBefore} | Title After: {driver.Title}");
-                Log.Info($"RefreshPage | URL: {urlBefore} | Title Before: {titleBefore} | Title After: {driver.Title}");
-                ExtentReporter.NodeInfo($"RefreshPage | URL: {urlBefore} | Title Before: {titleBefore} | Title After: {driver.Title}");
             }
             catch (InvalidOperationException ex)
             {
-                Console.WriteLine($"RefreshPage | {ex.Message}");
+                Console.WriteLine($"RefreshPage failed | Exception: {ex.Message}");
                 throw;
             }
             catch (Exception ex)
             {
-                throw new Exception($"RefreshPage failed | {ex.Message}");
+                throw new Exception($"RefreshPage failed | Exception: {ex.Message}");
             }
         }
 
@@ -287,17 +277,15 @@ namespace KeywordDriven.ActionKeywords
                 WaitForDocumentReady();
 
                 Console.WriteLine($"NavigateBack | From: {urlBefore} | To: {driver.Url}");
-                Log.Info($"NavigateBack | From: {urlBefore} | To: {driver.Url}");
-                ExtentReporter.NodeInfo($"NavigateBack | From: {urlBefore} | To: {driver.Url}");
             }
             catch (InvalidOperationException ex)
             {
-                Console.WriteLine($"NavigateBack | {ex.Message}");
+                Console.WriteLine($"NavigateBack failed | Exception: {ex.Message}");
                 throw;
             }
             catch (Exception ex)
             {
-                throw new Exception($"NavigateBack failed | {ex.Message}");
+                throw new Exception($"NavigateBack failed | Exception: {ex.Message}");
             }
         }
 
@@ -317,17 +305,15 @@ namespace KeywordDriven.ActionKeywords
                 WaitForDocumentReady();
 
                 Console.WriteLine($"NavigateForward | From: {urlBefore} | To: {driver.Url}");
-                Log.Info($"NavigateForward | From: {urlBefore} | To: {driver.Url}");
-                ExtentReporter.NodeInfo($"NavigateForward | From: {urlBefore} | To: {driver.Url}");
             }
             catch (InvalidOperationException ex)
             {
-                Console.WriteLine($"NavigateForward | {ex.Message}");
+                Console.WriteLine($"NavigateForward failed | Exception: {ex.Message}");
                 throw;
             }
             catch (Exception ex)
             {
-                throw new Exception($"NavigateForward failed | {ex.Message}");
+                throw new Exception($"NavigateForward failed | Exception: {ex.Message}");
             }
         }
 
@@ -351,26 +337,20 @@ namespace KeywordDriven.ActionKeywords
                 Console.WriteLine($"SetWindowSize | " +
                                   $"Requested: {width}x{height} | " +
                                   $"Applied: {actualSize.Width}x{actualSize.Height}");
-                Log.Info($"SetWindowSize | " +
-                                  $"Requested: {width}x{height} | " +
-                                  $"Applied: {actualSize.Width}x{actualSize.Height}");
-                ExtentReporter.NodeInfo($"SetWindowSize | " +
-                                  $"Requested: {width}x{height} | " +
-                                  $"Applied: {actualSize.Width}x{actualSize.Height}");
             }
             catch (InvalidOperationException ex)
             {
-                Console.WriteLine($"SetWindowSize | {ex.Message}");
+                Console.WriteLine($"SetWindowSize failed | Exception: {ex.Message}");
                 throw;
             }
             catch (ArgumentException ex)
             {
-                Console.WriteLine($"SetWindowSize | {ex.Message}");
+                Console.WriteLine($"SetWindowSize failed | Exception: {ex.Message}");
                 throw;
             }
             catch (Exception ex)
             {
-                throw new Exception($"SetWindowSize failed [{width}x{height}] | {ex.Message}");
+                throw new Exception($"SetWindowSize failed [{width}x{height}] | Exception: {ex.Message}");
             }
         }
 
@@ -461,33 +441,51 @@ namespace KeywordDriven.ActionKeywords
             currentDriver.Quit();
         }
 
+        internal static void CloseBrowserForCleanup()
+        {
+            ExecuteDriverKeyword(
+                nameof(Keywords.CloseBrowser),
+                (string.Empty, string.Empty),
+                CloseBrowserWindow,
+                preserveExistingOutcome: true);
+        }
+
         private static void EnsureBrowserOpen(string operation)
         {
             if (driver == null)
                 throw new InvalidOperationException($"Browser is not open. Call OpenBrowser before {operation}.");
         }
 
-        internal static void ExecuteDriverKeyword(string keyword, string details, Action action, bool preserveExistingOutcome = false)
+        internal static void ExecuteDriverKeyword(string keyword, (string obj, string data) details, Action action, bool preserveExistingOutcome = false)
         {
-            string message = string.IsNullOrWhiteSpace(details) ? keyword : $"{keyword} | {details}";
+            string message = string.Join(
+                " | ",
+                new[] { keyword, details.obj, details.data }
+                    .Where(value => !string.IsNullOrWhiteSpace(value)));
             Log.Info(message);
             ExtentReporter.NodeInfo(message);
 
             try
             {
                 action();
+                if (!preserveExistingOutcome)
+                {
+                    Log.Pass($"{message} | PASS");
+                    ExtentReporter.NodePass($"{message} | PASS");
+                }
+
                 if (!preserveExistingOutcome || DriverScript.outcome == (int)Outcome.Pass)
                     DriverScript.outcome = (int)Outcome.Pass;
             }
             catch (Exception exception)
             {
-                string errorMessage = $"{keyword} failed | {exception.Message}";
+                string errorMessage = $"{message} | Exception: {exception.Message}";
                 Log.Error(errorMessage);
                 ExtentReporter.NodeError(errorMessage);
-                DriverScript.outcome = (int)Outcome.Error;
+                if (!preserveExistingOutcome)
+                    DriverScript.outcome = (int)Outcome.Error;
             }
         }
-
     }
 
     public partial class Keywords
@@ -496,61 +494,60 @@ namespace KeywordDriven.ActionKeywords
        
         public static void OpenBrowser(string obj, string data)
         {
-            Drivers.ExecuteDriverKeyword(nameof(OpenBrowser), $"Browser: {data}", () => Drivers.OpenBrowser(data));
+            Drivers.ExecuteDriverKeyword(nameof(OpenBrowser), (obj,data), () => Drivers.OpenBrowser(data));
         }
 
         public static void CloseBrowser(string obj, string data)
         {
             Drivers.ExecuteDriverKeyword(
                 nameof(CloseBrowser),
-                "Close current browser window",
-                Drivers.CloseBrowserWindow,
-                preserveExistingOutcome: true);
+                (obj,data),
+                Drivers.CloseBrowserWindow);
         }
 
         public static void CloseAllBrowser(string obj, string data)
         {
-            Drivers.ExecuteDriverKeyword(nameof(CloseAllBrowser), "Close all browser windows", Drivers.CloseAllBrowsers);
+            Drivers.ExecuteDriverKeyword(nameof(CloseAllBrowser), (obj, data), Drivers.CloseAllBrowsers);
         }
 
         public static void MaximizeBrowser(string obj, string data)
         {
-            Drivers.ExecuteDriverKeyword(nameof(MaximizeBrowser), string.Empty, Drivers.MaximizeBrowser);
+            Drivers.ExecuteDriverKeyword(nameof(MaximizeBrowser), (obj, data), Drivers.MaximizeBrowser);
         }
 
         public static void MinimizeBrowser(string obj, string data)
         {
-            Drivers.ExecuteDriverKeyword(nameof(MinimizeBrowser), string.Empty, Drivers.MinimizeBrowser);
+            Drivers.ExecuteDriverKeyword(nameof(MinimizeBrowser), (obj, data), Drivers.MinimizeBrowser);
         }
 
         public static void FullScreenBrowser(string obj, string data)
         {
-            Drivers.ExecuteDriverKeyword(nameof(FullScreenBrowser), string.Empty, Drivers.FullScreenBrowser);
+            Drivers.ExecuteDriverKeyword(nameof(FullScreenBrowser), (obj, data), Drivers.FullScreenBrowser);
         }
 
         public static void NavigateToUrl(string obj, string data)
         {
-            Drivers.ExecuteDriverKeyword(nameof(NavigateToUrl), $"URL: {data}", () => Drivers.NavigateToUrl(data));
+            Drivers.ExecuteDriverKeyword(nameof(NavigateToUrl), (obj, data), () => Drivers.NavigateToUrl(data));
         }
 
         public static void RefreshPage(string obj, string data)
         {
-            Drivers.ExecuteDriverKeyword(nameof(RefreshPage), string.Empty, Drivers.RefreshPage);
+            Drivers.ExecuteDriverKeyword(nameof(RefreshPage), (obj, data), Drivers.RefreshPage);
         }
 
         public static void NavigateBack(string obj, string data)
         {
-            Drivers.ExecuteDriverKeyword(nameof(NavigateBack), string.Empty, Drivers.NavigateBack);
+            Drivers.ExecuteDriverKeyword(nameof(NavigateBack), (obj, data), Drivers.NavigateBack);
         }
 
         public static void NavigateForward(string obj, string data)
         {
-            Drivers.ExecuteDriverKeyword(nameof(NavigateForward), string.Empty, Drivers.NavigateForward);
+            Drivers.ExecuteDriverKeyword(nameof(NavigateForward), (obj, data), Drivers.NavigateForward);
         }
 
         public static void SetWindowSize(string obj, string data)
         {
-            Drivers.ExecuteDriverKeyword(nameof(SetWindowSize), $"Size: {data}", () =>
+            Drivers.ExecuteDriverKeyword(nameof(SetWindowSize), (obj, data), () =>
             {
                 string[] dimensions = data?.Split(',');
                 if (dimensions == null || dimensions.Length != 2
@@ -564,17 +561,17 @@ namespace KeywordDriven.ActionKeywords
 
         public static void SwitchToWindow(string obj, string data)
         {
-            Drivers.ExecuteDriverKeyword(nameof(SwitchToWindow), $"Window: {data}", () => Drivers.SwitchToWindow(data));
+            Drivers.ExecuteDriverKeyword(nameof(SwitchToWindow), (obj, data), () => Drivers.SwitchToWindow(data));
         }
 
         public static void SwitchToFrame(string obj, string data)
         {
-            Drivers.ExecuteDriverKeyword(nameof(SwitchToFrame), $"Frame locator: {obj}", () => Drivers.SwitchToFrame(Locators.GetLocator(obj)));
+            Drivers.ExecuteDriverKeyword(nameof(SwitchToFrame), (obj, data), () => Drivers.SwitchToFrame(Locators.GetLocator(obj)));
         }
 
         public static void SwitchToDefaultContent(string obj, string data)
         {
-            Drivers.ExecuteDriverKeyword(nameof(SwitchToDefaultContent), string.Empty, Drivers.SwitchToDefaultContent);
+            Drivers.ExecuteDriverKeyword(nameof(SwitchToDefaultContent), (obj, data) , Drivers.SwitchToDefaultContent);
         }
 
         #endregion

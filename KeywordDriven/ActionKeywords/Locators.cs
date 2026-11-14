@@ -72,8 +72,7 @@ namespace KeywordDriven.ActionKeywords
             }
             catch (Exception e)
             {
-                Log.Info($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name}| Exception: {e.Message}");
+                Console.WriteLine($"{MethodBase.GetCurrentMethod().Name} failed | Exception: {e.Message}");
                 return false;
             }
         }
@@ -88,8 +87,7 @@ namespace KeywordDriven.ActionKeywords
             }
             catch (Exception e)
             {
-                Log.Info($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                Console.WriteLine($"{MethodBase.GetCurrentMethod().Name} failed | Exception: {e.Message}");               
                 return false;
             }
         }
@@ -125,8 +123,7 @@ namespace KeywordDriven.ActionKeywords
             }
             catch (Exception e)
             {
-                Log.Info($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                Console.WriteLine($"{MethodBase.GetCurrentMethod().Name} failed | Exception: {e.Message}");
                 return false;
             }
         }
@@ -156,8 +153,7 @@ namespace KeywordDriven.ActionKeywords
             }
             catch (Exception e)
             {
-                Log.Info($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                Console.WriteLine($"{MethodBase.GetCurrentMethod().Name} failed | Exception: {e.Message}");
                 return false;
             }
         }
@@ -335,8 +331,7 @@ namespace KeywordDriven.ActionKeywords
             }
             catch (Exception e)
             {
-                Log.Info($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                Console.WriteLine($"{MethodBase.GetCurrentMethod().Name} failed | Exception: {e.Message}");
                 return false;
             }
         }
@@ -361,8 +356,7 @@ namespace KeywordDriven.ActionKeywords
             }
             catch (Exception e)
             {
-                Log.Info($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
-                ExtentReporter.NodeInfo($"{MethodBase.GetCurrentMethod().Name} | Exception: {e.Message}");
+                Console.WriteLine($"{MethodBase.GetCurrentMethod().Name} failed | Exception: {e.Message}");
                 return false;
             }
         }
@@ -455,23 +449,23 @@ namespace KeywordDriven.ActionKeywords
             }
             catch (ArgumentException ex)
             {
-                Console.WriteLine($"UploadFile | {ex.Message}");
+                Console.WriteLine($"UploadFile failed | Exception: {ex.Message}");
                 throw;
             }
             catch (FileNotFoundException ex)
             {
-                Console.WriteLine($"UploadFile | {ex.Message}");
+                Console.WriteLine($"UploadFile failed | Exception: {ex.Message}");
                 throw;
             }
             catch (WebDriverTimeoutException)
             {
                 throw new Exception(
-                    $"UploadFile | File input not ready within timeout | Locator: {locator}");
+                    $"UploadFile failed | Locator: {locator} | Exception: File input not ready within timeout");
             }
             catch (Exception ex)
             {
                 throw new Exception(
-                    $"UploadFile | Locator: {locator} | Error: {ex.Message}");
+                    $"UploadFile failed | Locator: {locator} | Exception: {ex.Message}");
             }
         }
 
@@ -505,43 +499,50 @@ namespace KeywordDriven.ActionKeywords
                 string combinedPaths = string.Join("\n", filePaths);
                 driver.FindElement(locator).SendKeys(combinedPaths);
 
-                Console.WriteLine($"[PASS] UploadMultipleFiles" +
+                Console.WriteLine($"UploadMultipleFiles" +
                                   $"\n  Locator    : {locator}" +
                                   $"\n  File Count : {filePaths.Length}" +
                                   $"\n  Files      : {string.Join(", ", filePaths.Select(Path.GetFileName))}");
             }
             catch (ArgumentException ex)
             {
-                Console.WriteLine($"UploadMultipleFiles - {ex.Message}");
+                Console.WriteLine($"UploadMultipleFiles failed | Exception: {ex.Message}");
                 throw;
             }
             catch (FileNotFoundException ex)
             {
-                Console.WriteLine($"UploadMultipleFiles - {ex.Message}");
+                Console.WriteLine($"UploadMultipleFiles failed| Exception: {ex.Message}");
                 throw;
             }
             catch (Exception ex)
             {
                 throw new Exception(
-                    $"UploadMultipleFiles | Locator: {locator} | Error: {ex.Message}");
+                    $"UploadMultipleFiles | Locator: {locator} | Exception: {ex.Message}");
             }
         }
 
         internal static void ExecuteLocatorKeyword(string keyword, string obj, string data, Action<By, string> operation)
         {
-            Log.Info($"{keyword} \"{data}\" on \"{obj}\"");
-            ExtentReporter.NodeInfo($"{keyword} \"{data}\" on \"{obj}\"");
+            string message = string.Join(
+                " | ",
+                new[] { keyword, obj, data }
+                    .Where(value => !string.IsNullOrWhiteSpace(value)));
+            Log.Info(message);
+            ExtentReporter.NodeInfo(message);
 
             try
             {
                 operation(GetLocator(obj), data);
                 ExtentReporter.NodeAddScreenShot(ScreenShots.TakeScreenshot(Drivers.driver));
+                Log.Pass($"{message} | PASS");
+                ExtentReporter.NodePass($"{message} | PASS");
                 DriverScript.outcome = (int)Outcome.Pass;
             }
             catch (Exception exception)
             {
-                Log.Error($"{keyword} | Exception: {exception.Message}");
-                ExtentReporter.NodeError($"{keyword} | Exception: {exception.Message}");
+                string errorMessage = $"{message} | Exception: {exception.Message}";
+                Log.Error(errorMessage);
+                ExtentReporter.NodeError(errorMessage);
                 DriverScript.outcome = (int)Outcome.Error;
             }
         }

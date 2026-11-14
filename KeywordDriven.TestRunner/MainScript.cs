@@ -26,8 +26,11 @@ namespace KeywordDriven.TestRunner
 
         [Test]
         public void TestCases()
-        {       
-            DriverScript.Execute_TestCases();   
+        {
+            Assert.That(
+                DriverScript.Execute_TestCases(),
+                Is.True,
+                "One or more enabled Excel test cases failed or contained errors. See the workbook results and test logs.");
         }
 
         [TearDown]

@@ -26,28 +26,28 @@ namespace KeywordDriven.ActionKeywords
         internal static void Run(string keyword, string details, Func<bool> verification)
         {
             currentStepFailed = false;
-            Log.Info($"{keyword}: {details}");
-            ExtentReporter.NodeInfo($"{keyword}: {details}");
+            Log.Info($"{keyword} | {details}");
+            ExtentReporter.NodeInfo($"{keyword} | {details}");
 
             try
             {
                 if (verification())
                 {
-                    Log.Pass($"{keyword}: passed");
-                    ExtentReporter.NodePass($"{keyword}: passed");
+                    Log.Pass($"{keyword} | {details} | PASS");
+                    ExtentReporter.NodePass($"{keyword} | {details} | PASS");
                     return;
                 }
 
                 currentStepFailed = true;
-                failures.Add($"{keyword}: {details}");
-                Log.Fail($"{keyword}: verification failed ({details})");
-                ExtentReporter.NodeFail($"{keyword}: verification failed ({details})");
+                failures.Add($"{keyword} | {details}");
+                Log.Fail($"{keyword} | {details} | FAIL");
+                ExtentReporter.NodeFail($"{keyword} | {details} | FAIL");
             }
             catch (Exception exception)
             {
                 DriverScript.outcome = (int)Outcome.Error;
-                Log.Error($"{keyword}: {exception.Message}");
-                ExtentReporter.NodeError($"{keyword}: {exception.Message}");
+                Log.Error($"{keyword} | Exception: {exception.Message}");
+                ExtentReporter.NodeError($"{keyword} | Exception: {exception.Message}");
             }
         }
     }

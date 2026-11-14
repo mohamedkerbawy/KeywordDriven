@@ -29,7 +29,7 @@ Excel results + execution logs + Extent HTML report
 
 | Component | Responsibility |
 |---|---|
-| `KeywordDriven.TestRunner` | NUnit entry point. Sets up the test workbook, driver settings, logger, and report, then calls the driver script. |
+| `KeywordDriven.TestRunner` | NUnit entry point. Sets up the test workbook, driver settings, logger, and report, then calls the driver script. The Test Explorer test fails if any enabled Excel test case fails or errors. |
 | `KeywordDriven.UnitTests` | NUnit project for isolated framework tests. It checks the public keyword dispatch contract and unit-level behavior of drivers, locators, waits, assertions, and soft verifications using mocked Selenium interfaces. |
 | `Execution/DriverScript` | Reads test cases and steps, skips cases not marked `Yes`, invokes the keyword named by each step, and records step and case results. |
 | `ActionKeywords/Keywords` | Public keyword API split across `Drivers.cs`, `Locators.cs`, `Waits.cs`, `Assertions.cs`, and `Verifications.cs`. The driver resolves each method by name and passes the step's page object and test data. |
@@ -41,7 +41,7 @@ Excel results + execution logs + Extent HTML report
 | `Utils/Logger`, `ExtentReporter`, and `ScreenShots` | Support execution diagnostics and test reporting. The NUnit teardown flushes the HTML report and saves/closes the workbook. |
 | `Config` | Holds workbook sheet/column definitions, output paths, and browser/timeout settings. |
 
-For each enabled case, `DriverScript` reads its steps in workbook order. A successful keyword marks the step as passed; a failed assertion or execution error marks the step and stops that case. Failed soft verifications are summarized after the steps finish and cause the case to fail without stopping subsequent steps.
+For each enabled case, `DriverScript` reads its steps in workbook order. A successful keyword marks the step as passed; a failed assertion or execution error marks the step and stops that case. Failed soft verifications are summarized after the steps finish and cause the case to fail without stopping subsequent steps. After all enabled cases run, any case failure or error makes the NUnit test fail in Test Explorer.
 
 ## Running unit tests
 
