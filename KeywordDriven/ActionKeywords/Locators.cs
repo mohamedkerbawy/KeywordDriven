@@ -72,7 +72,8 @@ namespace KeywordDriven.ActionKeywords
             }
             catch (Exception e)
             {
-                Console.WriteLine($"{MethodBase.GetCurrentMethod().Name} failed | Exception: {e.Message}");
+                string message = $"{MethodBase.GetCurrentMethod().Name} failed | Exception: {e.Message}";
+                Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{"DEBUG",-5}] {message}");
                 return false;
             }
         }
@@ -87,7 +88,8 @@ namespace KeywordDriven.ActionKeywords
             }
             catch (Exception e)
             {
-                Console.WriteLine($"{MethodBase.GetCurrentMethod().Name} failed | Exception: {e.Message}");               
+                string message = $"{MethodBase.GetCurrentMethod().Name} failed | Exception: {e.Message}";
+                Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{"DEBUG",-5}] {message}");
                 return false;
             }
         }
@@ -123,7 +125,8 @@ namespace KeywordDriven.ActionKeywords
             }
             catch (Exception e)
             {
-                Console.WriteLine($"{MethodBase.GetCurrentMethod().Name} failed | Exception: {e.Message}");
+                string message = $"{MethodBase.GetCurrentMethod().Name} failed | Exception: {e.Message}";
+                Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{"DEBUG",-5}] {message}");
                 return false;
             }
         }
@@ -153,7 +156,8 @@ namespace KeywordDriven.ActionKeywords
             }
             catch (Exception e)
             {
-                Console.WriteLine($"{MethodBase.GetCurrentMethod().Name} failed | Exception: {e.Message}");
+                string message = $"{MethodBase.GetCurrentMethod().Name} failed | Exception: {e.Message}";
+                Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{"DEBUG",-5}] {message}");
                 return false;
             }
         }
@@ -331,7 +335,8 @@ namespace KeywordDriven.ActionKeywords
             }
             catch (Exception e)
             {
-                Console.WriteLine($"{MethodBase.GetCurrentMethod().Name} failed | Exception: {e.Message}");
+                string message = $"{MethodBase.GetCurrentMethod().Name} failed | Exception: {e.Message}";
+                Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{"DEBUG",-5}] {message}");
                 return false;
             }
         }
@@ -356,7 +361,8 @@ namespace KeywordDriven.ActionKeywords
             }
             catch (Exception e)
             {
-                Console.WriteLine($"{MethodBase.GetCurrentMethod().Name} failed | Exception: {e.Message}");
+                string message = $"{MethodBase.GetCurrentMethod().Name} failed | Exception: {e.Message}";
+                Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{"DEBUG",-5}] {message}");
                 return false;
             }
         }
@@ -410,8 +416,10 @@ namespace KeywordDriven.ActionKeywords
                 double fileSizeMB = fileInfo.Length / (1024.0 * 1024.0);
 
                 if (fileSizeMB > 10)
-                    Console.WriteLine($"UploadFile | Large file detected: {fileSizeMB:F2} MB | " +
-                                      $"File: {fileInfo.Name}");
+                {
+                    string message = $"UploadFile | Large file detected: {fileSizeMB:F2} MB | " + $"File: {fileInfo.Name}";
+                    Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{"DEBUG",-5}] {message}");
+                }
 
                 // Locate file input element
                 // Make hidden file inputs visible for upload
@@ -423,8 +431,10 @@ namespace KeywordDriven.ActionKeywords
                         .ExecuteScript("arguments[0].style.display='block'; " +
                                        "arguments[0].style.visibility='visible';", driver.FindElement(locator));
 
-                    Console.WriteLine($"UploadFile | Hidden input made visible via JS | " +
-                                      $"Locator: {locator}");
+                    string message = $"UploadFile | Hidden input made visible via JS | " +
+                                      $"Locator: {locator}";
+
+                    Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{"DEBUG",-5}] {message}");
                 }
 
                 // Send file path to input 
@@ -499,19 +509,23 @@ namespace KeywordDriven.ActionKeywords
                 string combinedPaths = string.Join("\n", filePaths);
                 driver.FindElement(locator).SendKeys(combinedPaths);
 
-                Console.WriteLine($"UploadMultipleFiles" +
+                string message = $"UploadMultipleFiles" +
                                   $"\n  Locator    : {locator}" +
                                   $"\n  File Count : {filePaths.Length}" +
-                                  $"\n  Files      : {string.Join(", ", filePaths.Select(Path.GetFileName))}");
+                                  $"\n  Files      : {string.Join(", ", filePaths.Select(Path.GetFileName))}";
+
+                Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{"DEBUG",-5}] {message}");
             }
             catch (ArgumentException ex)
             {
-                Console.WriteLine($"UploadMultipleFiles failed | Exception: {ex.Message}");
+                string message = $"UploadMultipleFiles failed | Exception: {ex.Message}";
+                Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{"DEBUG",-5}] {message}");
                 throw;
             }
             catch (FileNotFoundException ex)
             {
-                Console.WriteLine($"UploadMultipleFiles failed| Exception: {ex.Message}");
+                string message = $"UploadMultipleFiles failed| Exception: {ex.Message}";
+                Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{"DEBUG",-5}] {message}");
                 throw;
             }
             catch (Exception ex)

@@ -52,7 +52,7 @@ namespace KeywordDriven.Utils
                 return;
 
             extent.Flush();
-            Console.WriteLine($"Report generated: {_reportPath}");
+            Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{"DEBUG",-5}] Report generated | {_reportPath}");
         }
 
         internal static void CreateTest(string testName, string description)

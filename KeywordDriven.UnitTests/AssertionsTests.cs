@@ -3,6 +3,7 @@ using KeywordDriven.ActionKeywords;
 using KeywordDriven.Execution;
 using Moq;
 using OpenQA.Selenium;
+using Assert = NUnit.Framework.Assert;
 
 namespace KeywordDriven.UnitTests;
 
@@ -154,11 +155,33 @@ public class AssertionsTests : ActionKeywordTestBase
     public void Run_UpdatesOutcomeForPassAndFailure()
     {
         DriverScript.outcome = (int)Outcome.Error;
-        Assertions.Run("AssertExample", "details", () => true);
+        Assertions.Run("AssertExample", "details", () => Assertions.EvaluatePageMatch("same", "same", "exact"));
         Assert.That(DriverScript.outcome, Is.EqualTo((int)Outcome.Pass));
 
-        Assertions.Run("AssertExample", "details", () => false);
+        Assertions.Run("AssertExample", "details", () => Assertions.EvaluatePageMatch("actual", "expected", "exact"));
         Assert.That(DriverScript.outcome, Is.EqualTo((int)Outcome.Fail));
+    }
+
+    [Test]
+    public void Run_LogsExpectedAndActualValues()
+    {
+        TextWriter originalOutput = Console.Out;
+        using var output = new StringWriter();
+        try
+        {
+            Console.SetOut(output);
+            Assertions.Run(
+                "AssertExample",
+                "page title",
+                () => Assertions.EvaluatePageMatch("Welcome", "Dashboard", "exact"));
+        }
+        finally
+        {
+            Console.SetOut(originalOutput);
+        }
+
+        Assert.That(output.ToString(), Does.Contain("Expected: exact \"Dashboard\""));
+        Assert.That(output.ToString(), Does.Contain("Actual: \"Welcome\""));
     }
 
     private static void SetElements(params IWebElement[] elements)

@@ -47,7 +47,7 @@ namespace KeywordDriven.ActionKeywords
                 options.AddUserProfilePreference("profile.default_content_settings.popups", 0);
 
                 IWebDriver driver = new ChromeDriver(options);
-                Console.WriteLine($"OpenChrome success");
+                Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{"DEBUG",-5}] OpenChrome success");
 
                 return driver;
             }
@@ -82,7 +82,7 @@ namespace KeywordDriven.ActionKeywords
                 options.AcceptInsecureCertificates = true;
 
                 IWebDriver driver = new FirefoxDriver(options);
-                Console.WriteLine($"OpenFirefox success");
+                Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{"DEBUG",-5}] OpenFirefox success");
                 return driver;
             }
             catch (Exception ex)
@@ -117,7 +117,7 @@ namespace KeywordDriven.ActionKeywords
                 options.AddUserProfilePreference("profile.password_manager_enabled", false);
 
                 IWebDriver driver = new EdgeDriver(options);
-                Console.WriteLine($"OpenEdge success");
+                Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{"DEBUG",-5}] OpenEdge success");
                 return driver;
             }
             catch (Exception ex)
@@ -156,7 +156,7 @@ namespace KeywordDriven.ActionKeywords
 
                 driver = newDriver;
                 string message = $"OpenBrowser | Browser: {browserType} | Headless: {DriverSetting.Headless}";
-                Console.WriteLine(message);
+                Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{"DEBUG",-5}] {message}");
                 return driver;
             }
             catch
@@ -176,12 +176,15 @@ namespace KeywordDriven.ActionKeywords
 
                 driver.Manage().Window.Maximize();
 
-                Console.WriteLine($"MaximizeBrowser | " +
-                                  $"Size: {driver.Manage().Window.Size.Width}x{driver.Manage().Window.Size.Height}");
+                string message = $"MaximizeBrowser | " +
+                                  $"Size: {driver.Manage().Window.Size.Width}x{driver.Manage().Window.Size.Height}";
+
+                Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{"DEBUG",-5}] {message}");
             }
             catch (InvalidOperationException ex)
             {
-                Console.WriteLine($"MaximizeBrowser | Exception: {ex.Message}");
+                string message = $"MaximizeBrowser | Exception: {ex.Message}";
+                Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{"DEBUG",-5}] {message}");
                 throw;
             }
             catch (Exception ex)
@@ -214,16 +217,19 @@ namespace KeywordDriven.ActionKeywords
                 // Wait until page is fully loaded
                 WaitForDocumentReady();
 
-                Console.WriteLine($"NavigateToUrl | URL: {url} | Title: {driver.Title}");
+                string message = $"NavigateToUrl | URL: {url} | Title: {driver.Title}";
+                Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{"DEBUG",-5}] {message}");
             }
             catch (InvalidOperationException ex)
             {
-                Console.WriteLine($"NavigateToUrl failed | Exception: {ex.Message}");
+                string message = $"NavigateToUrl failed | Exception: {ex.Message}";
+                Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{"DEBUG",-5}] {message}");
                 throw;
             }
             catch (ArgumentException ex)
             {
-                Console.WriteLine($"NavigateToUrl failed | Exception: {ex.Message}");
+                string message = $"NavigateToUrl failed | Exception: {ex.Message}";
+                Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{"DEBUG",-5}] {message}");
                 throw;
             }
             catch (WebDriverException ex)
@@ -248,11 +254,13 @@ namespace KeywordDriven.ActionKeywords
                 // Wait for page to fully reload
                 WaitForDocumentReady();
 
-                Console.WriteLine($"RefreshPage | URL: {urlBefore} | Title Before: {titleBefore} | Title After: {driver.Title}");
+                string message = $"RefreshPage | URL: {urlBefore} | Title Before: {titleBefore} | Title After: {driver.Title}";
+                Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{"DEBUG",-5}] {message}");
             }
             catch (InvalidOperationException ex)
             {
-                Console.WriteLine($"RefreshPage failed | Exception: {ex.Message}");
+                string message = $"RefreshPage failed | Exception: {ex.Message}";
+                Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{"DEBUG",-5}] {message}");
                 throw;
             }
             catch (Exception ex)
@@ -276,11 +284,13 @@ namespace KeywordDriven.ActionKeywords
                 // Wait for page to fully load
                 WaitForDocumentReady();
 
-                Console.WriteLine($"NavigateBack | From: {urlBefore} | To: {driver.Url}");
+                string message = $"NavigateBack | From: {urlBefore} | To: {driver.Url}";
+                Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{"DEBUG",-5}] {message}");
             }
             catch (InvalidOperationException ex)
             {
-                Console.WriteLine($"NavigateBack failed | Exception: {ex.Message}");
+                string message = $"NavigateBack failed | Exception: {ex.Message}";
+                Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{"DEBUG",-5}] {message}");
                 throw;
             }
             catch (Exception ex)
@@ -304,11 +314,13 @@ namespace KeywordDriven.ActionKeywords
                 // Wait for page to fully load
                 WaitForDocumentReady();
 
-                Console.WriteLine($"NavigateForward | From: {urlBefore} | To: {driver.Url}");
+                string message = $"NavigateForward | From: {urlBefore} | To: {driver.Url}";
+                Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{"DEBUG",-5}] {message}");
             }
             catch (InvalidOperationException ex)
             {
-                Console.WriteLine($"NavigateForward failed | Exception: {ex.Message}");
+                string message = $"NavigateForward failed | Exception: {ex.Message}";
+                Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{"DEBUG",-5}] {message}");
                 throw;
             }
             catch (Exception ex)
@@ -334,18 +346,22 @@ namespace KeywordDriven.ActionKeywords
                 // Verify actual applied size (browser may enforce a minimum)
                 var actualSize = driver.Manage().Window.Size;
 
-                Console.WriteLine($"SetWindowSize | " +
+                string message = $"SetWindowSize | " +
                                   $"Requested: {width}x{height} | " +
-                                  $"Applied: {actualSize.Width}x{actualSize.Height}");
+                                  $"Applied: {actualSize.Width}x{actualSize.Height}";
+
+                Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{"DEBUG",-5}] {message}");
             }
             catch (InvalidOperationException ex)
             {
-                Console.WriteLine($"SetWindowSize failed | Exception: {ex.Message}");
+                string message = $"SetWindowSize failed | Exception: {ex.Message}";
+                Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{"DEBUG",-5}] {message}");
                 throw;
             }
             catch (ArgumentException ex)
             {
-                Console.WriteLine($"SetWindowSize failed | Exception: {ex.Message}");
+                string message = $"SetWindowSize failed | Exception: {ex.Message}";
+                Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{"DEBUG",-5}] {message}");
                 throw;
             }
             catch (Exception ex)

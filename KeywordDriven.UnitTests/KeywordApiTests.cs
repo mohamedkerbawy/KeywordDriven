@@ -1,5 +1,6 @@
 using System.Reflection;
 using KeywordDriven.ActionKeywords;
+using Assert = NUnit.Framework.Assert;
 
 namespace KeywordDriven.UnitTests;
 

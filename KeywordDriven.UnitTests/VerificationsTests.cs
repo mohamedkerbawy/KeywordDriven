@@ -1,5 +1,6 @@
 using KeywordDriven.ActionKeywords;
 using KeywordDriven.Execution;
+using Assert = NUnit.Framework.Assert;
 
 namespace KeywordDriven.UnitTests;
 
@@ -10,7 +11,7 @@ public class VerificationsTests : ActionKeywordTestBase
     {
         DriverScript.outcome = (int)Outcome.Pass;
 
-        Verifications.Run("VerifyExample", "expected value", () => false);
+        Verifications.Run("VerifyExample", "expected value", () => Assertions.EvaluatePageMatch("actual", "expected", "exact"));
 
         Assert.Multiple(() =>
         {
@@ -22,11 +23,33 @@ public class VerificationsTests : ActionKeywordTestBase
     }
 
     [Test]
+    public void Run_LogsExpectedAndActualValues()
+    {
+        TextWriter originalOutput = Console.Out;
+        using var output = new StringWriter();
+        try
+        {
+            Console.SetOut(output);
+            Verifications.Run(
+                "VerifyExample",
+                "page title",
+                () => Assertions.EvaluatePageMatch("Welcome", "Dashboard", "exact"));
+        }
+        finally
+        {
+            Console.SetOut(originalOutput);
+        }
+
+        Assert.That(output.ToString(), Does.Contain("Expected: exact \"Dashboard\""));
+        Assert.That(output.ToString(), Does.Contain("Actual: \"Welcome\""));
+    }
+
+    [Test]
     public void Run_PassingVerificationClearsCurrentStepFailureButKeepsEarlierFailures()
     {
-        Verifications.Run("VerifyFirst", "first", () => false);
+        Verifications.Run("VerifyFirst", "first", () => Assertions.EvaluatePageMatch("actual", "expected", "exact"));
 
-        Verifications.Run("VerifySecond", "second", () => true);
+        Verifications.Run("VerifySecond", "second", () => Assertions.EvaluatePageMatch("same", "same", "exact"));
 
         Assert.Multiple(() =>
         {
@@ -39,7 +62,7 @@ public class VerificationsTests : ActionKeywordTestBase
     [Test]
     public void BeginTestCase_ClearsFailuresFromPreviousCase()
     {
-        Verifications.Run("VerifyExample", "details", () => false);
+        Verifications.Run("VerifyExample", "details", () => Assertions.EvaluatePageMatch("actual", "expected", "exact"));
 
         Verifications.BeginTestCase();
 

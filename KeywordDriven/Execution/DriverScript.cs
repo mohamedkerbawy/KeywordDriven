@@ -21,6 +21,19 @@ namespace KeywordDriven.Execution
         No
     }   
 
+    public sealed record TestCaseExecutionSummary(
+        int Total,
+        int Passed,
+        int Failed,
+        int Errors,
+        int Skipped)
+    {
+        public bool AllPassed => Failed == 0 && Errors == 0;
+
+        public override string ToString() =>
+            $"Test cases | All: {Total} | Passed: {Passed} | Failed: {Failed} | Error: {Errors} | Skipped: {Skipped}";
+    }
+
     public class DriverScript
     {
         //Public action keywords class object
@@ -57,13 +70,22 @@ namespace KeywordDriven.Execution
         // This method will execute all the test cases and test steps based on the run mode value in the TestCases sheet
         public static bool Execute_TestCases()
         {
-            bool allTestCasesPassed = true;
+            return Execute_TestCasesWithSummary().AllPassed;
+        }
+
+        public static TestCaseExecutionSummary Execute_TestCasesWithSummary()
+        {
+            int totalTestCases = 0;
+            int passedTestCases = 0;
+            int failedTestCases = 0;
+            int erroredTestCases = 0;
+            int skippedTestCases = 0;
 
             // get the total number of testcases from the TestCases sheet
-            int totalTestCases = ExcelManager.GetRowCount(ExcelSetting.Sheet_TestCases);
+            int lastTestCaseRow = ExcelManager.GetRowCount(ExcelSetting.Sheet_TestCases);
 
             // This loop will execute number of times equal to total number of test cases
-            for (int iTestcase = 1; iTestcase < totalTestCases; iTestcase++)
+            for (int iTestcase = 1; iTestcase < lastTestCaseRow; iTestcase++)
             {
                 outcome = (int)Outcome.Pass;
 
@@ -73,6 +95,10 @@ namespace KeywordDriven.Execution
                 testCaseDesc = ExcelManager.GetCellData(iTestcase, ExcelSetting.Col_TestCases_Description, ExcelSetting.Sheet_TestCases);
                 runMode = ExcelManager.GetCellData(iTestcase, ExcelSetting.Col_TestCases_RunMode, ExcelSetting.Sheet_TestCases);
 
+                if (string.IsNullOrWhiteSpace(testCaseID))
+                    continue;
+
+                totalTestCases++;
                 if (runMode != null && runMode.Equals(RunMode.Yes.ToString()))
                 {
                     Log.StartTestCase(testCaseID);
@@ -137,12 +163,25 @@ namespace KeywordDriven.Execution
                         ExtentReporter.EndTestCase(outcome, testCaseID);
                     }
 
-                    if (outcome != (int)Outcome.Pass)
-                        allTestCasesPassed = false;
+                    if (outcome == (int)Outcome.Pass)
+                        passedTestCases++;
+                    else if (outcome == (int)Outcome.Fail)
+                        failedTestCases++;
+                    else if (outcome == (int)Outcome.Error)
+                        erroredTestCases++;
                 }
+                else
+                    skippedTestCases++;
             }
 
-            return allTestCasesPassed;
+            var summary = new TestCaseExecutionSummary(
+                totalTestCases,
+                passedTestCases,
+                failedTestCases,
+                erroredTestCases,
+                skippedTestCases);
+            Log.Info(summary.ToString());
+            return summary;
         }
 
         // This method will execute the action keyword for the current test step and set the result in the TestSteps sheet based on the outcome of the action keyword execution

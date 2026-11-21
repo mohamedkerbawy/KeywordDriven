@@ -2,7 +2,6 @@
 using KeywordDriven.Execution;
 using KeywordDriven.Utils;
 using OpenQA.Selenium;
-using OpenQA.Selenium.BiDi.Modules.BrowsingContext;
 using OpenQA.Selenium.Support.UI;
 using System;
 using System.Linq;

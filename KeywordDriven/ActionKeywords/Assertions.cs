@@ -10,6 +10,110 @@ namespace KeywordDriven.ActionKeywords
 {
     internal static class Assertions
     {
+        internal sealed record Result(string Expected, string Actual, bool Passed);
+
+        private static string FormatValue(string value) =>
+            value == null ? "<null>" : System.Text.Json.JsonSerializer.Serialize(value);
+
+        private static Result CreateResult(string expected, string actual, bool passed) =>
+            new(expected, actual, passed);
+
+        internal static Result EvaluateElementExists(string obj, bool shouldExist)
+        {
+            IWebElement element = FindElement(Drivers.driver, Locators.GetLocator(obj));
+            bool exists = element != null;
+            return CreateResult(
+                shouldExist ? "element exists" : "element does not exist",
+                exists ? "element exists" : "element does not exist",
+                exists == shouldExist);
+        }
+
+        internal static Result EvaluateElementState(string obj, string expected, Func<IWebElement, string> actualValue, Func<IWebElement, bool> predicate, bool missingIsPass = false)
+        {
+            IWebElement element = FindElement(Drivers.driver, Locators.GetLocator(obj));
+            if (element == null)
+                return CreateResult(expected, "element not found", missingIsPass);
+
+            string actual = actualValue(element);
+            return CreateResult(expected, actual, predicate(element));
+        }
+
+        internal static Result EvaluateElementMatch(string obj, string expected, string matchType)
+        {
+            IWebElement element = FindElement(Drivers.driver, Locators.GetLocator(obj));
+            if (element == null)
+                return CreateResult($"{matchType} {FormatValue(expected)}", "element not found", false);
+
+            string actual = GetElementText(element);
+            return CreateResult(
+                $"{matchType} {FormatValue(expected)}",
+                FormatValue(actual),
+                EvaluateMatch(actual, expected, matchType, ignoreCase: false));
+        }
+
+        internal static Result EvaluatePageMatch(string actual, string expected, string matchType)
+        {
+            return CreateResult(
+                $"{matchType} {FormatValue(expected)}",
+                FormatValue(actual),
+                EvaluateMatch(actual, expected, matchType, ignoreCase: false));
+        }
+
+        internal static Result EvaluateAttribute(string obj, string data, bool shouldExist)
+        {
+            string[] assertion = ParseAttributeAssertion(data);
+            if (string.IsNullOrWhiteSpace(assertion[0]))
+                throw new ArgumentException("Attribute assertion data must include an attribute name.", nameof(data));
+
+            IWebElement element = FindElement(Drivers.driver, Locators.GetLocator(obj));
+            string attributeValue = element?.GetDomAttribute(assertion[0]);
+            string actual = element == null ? "element not found" : FormatValue(attributeValue);
+            string expected = shouldExist
+                ? assertion[1] == null
+                    ? $"attribute {FormatValue(assertion[0])} exists"
+                    : $"attribute {FormatValue(assertion[0])} equals {FormatValue(assertion[1])}"
+                : assertion[1] == null
+                    ? $"attribute {FormatValue(assertion[0])} does not exist"
+                    : $"attribute {FormatValue(assertion[0])} does not equal {FormatValue(assertion[1])}";
+
+            bool passed = element != null && (shouldExist
+                ? attributeValue != null
+                    && (assertion[1] == null || string.Equals(attributeValue, assertion[1], StringComparison.Ordinal))
+                : assertion[1] == null
+                    ? attributeValue == null
+                    : !string.Equals(attributeValue, assertion[1], StringComparison.Ordinal));
+            return CreateResult(expected, actual, passed);
+        }
+
+        internal static Result EvaluateSelectedOption(string obj, string expected, string selectionType)
+        {
+            IWebElement element = FindElement(Drivers.driver, Locators.GetLocator(obj));
+            if (element == null)
+                return CreateResult(FormatValue(expected), "element not found", false);
+
+            SelectElement select = new(element);
+            IWebElement selectedOption = select.AllSelectedOptions.FirstOrDefault();
+            if (selectedOption == null)
+                return CreateResult(FormatValue(expected), "no option selected", false);
+
+            string actual = selectionType switch
+            {
+                "text" => selectedOption.Text,
+                "value" => selectedOption.GetAttribute("value"),
+                "index" => select.Options.ToList().FindIndex(option => option.Selected).ToString(),
+                _ => throw new ArgumentException($"Unsupported selection type: {selectionType}", nameof(selectionType))
+            };
+            bool passed = selectionType == "index"
+                ? int.TryParse(expected, out int expectedIndex)
+                    && int.TryParse(actual, out int actualIndex)
+                    && actualIndex == expectedIndex
+                : string.Equals(actual, expected, StringComparison.Ordinal);
+            return CreateResult(FormatValue(expected), FormatValue(actual), passed);
+        }
+
+        internal static Result EvaluateUrlMatch(string expected, string matchType) =>
+            EvaluatePageMatch(Drivers.driver.Url, expected, matchType);
+
         private static bool EvaluateMatch(string actual, string expected, string matchType, bool ignoreCase)
         {
             ArgumentNullException.ThrowIfNull(actual);
@@ -85,6 +189,28 @@ namespace KeywordDriven.ActionKeywords
             return actual == selected;
         }
 
+        internal static string GetSelectionState(IWebElement element, string expectedType)
+        {
+            string tagName = element.TagName;
+            string type = element.GetAttribute("type");
+            string role = element.GetAttribute("role");
+            bool isNativeInput = tagName.Equals("input", StringComparison.OrdinalIgnoreCase)
+                && string.Equals(type, expectedType, StringComparison.OrdinalIgnoreCase);
+            if (isNativeInput)
+                return element.Selected ? "selected" : "not selected";
+
+            if (!string.Equals(role, expectedType, StringComparison.OrdinalIgnoreCase))
+                return "unsupported control";
+
+            string ariaChecked = element.GetAttribute("aria-checked");
+            return ariaChecked switch
+            {
+                "true" => "selected",
+                "false" => "not selected",
+                _ => "unsupported control"
+            };
+        }
+
         internal static bool AssertElementMatch(string obj, string data, string matchType, bool ignoreCase = false)
         {
             By locator = Locators.GetLocator(obj);
@@ -153,6 +279,7 @@ namespace KeywordDriven.ActionKeywords
         {
             return AssertPageMatch(Drivers.driver.Url, data, matchType, ignoreCase);
         }
+        internal static string AssertionBooleanValue(bool value) => value ? "true" : "false";
 
         internal static bool AssertElementState(string obj, Func<IWebElement, bool> predicate)
         {
@@ -160,31 +287,41 @@ namespace KeywordDriven.ActionKeywords
             return element != null && predicate(element);
         }
 
-        internal static void Run(string keyword, string details, Func<bool> assertion)
+        internal static void RunAssertionElementState(string keyword, string obj, string expected, Func<IWebElement, bool> predicate, Func<IWebElement, string> actual, bool missingIsPass = false) =>
+            Assertions.Run(keyword, obj, () => Assertions.EvaluateElementState(obj, expected, actual, predicate, missingIsPass));
+
+        internal static void RunAssertionSelection(string keyword, string obj, string type, bool selected) =>
+           RunAssertionElementState(keyword, obj, selected ? "selected" : "not selected",
+               element => Assertions.HasExpectedSelection(element, type, selected),
+               element => Assertions.GetSelectionState(element, type));
+
+        internal static void Run(string keyword, string details, Func<Result> assertion)
         {
             Log.Info($"{keyword} | {details}");
             ExtentReporter.NodeInfo($"{keyword} | {details}");
 
             try
             {
-                if (assertion())
+                Result result = assertion();
+                string message = $"{keyword} | {details} | Expected: {result.Expected} | Actual: {result.Actual}";
+                if (result.Passed)
                 {
                     DriverScript.outcome = (int)Outcome.Pass;
-                    Log.Pass($"{keyword} | {details} | PASS");
-                    ExtentReporter.NodePass($"{keyword} | {details} | PASS");
+                    Log.Pass($"{message} | PASS");
+                    ExtentReporter.NodePass($"{message} | PASS");
                 }
                 else
                 {
                     DriverScript.outcome = (int)Outcome.Fail;
-                    Log.Fail($"{keyword} | {details} | FAIL");
-                    ExtentReporter.NodeFail($"{keyword} | {details} | FAIL");
+                    Log.Fail($"{message} | FAIL");
+                    ExtentReporter.NodeFail($"{message} | FAIL");
                 } 
             }
             catch (Exception exception)
             {
                 DriverScript.outcome = (int)Outcome.Error;
-                Log.Error($"{keyword} | Exception: {exception.Message}");
-                ExtentReporter.NodeError($"{keyword} | Exception: {exception.Message}");
+                Log.Error($"{keyword} | {details} | Expected: unavailable | Actual: unavailable | Exception: {exception.Message}");
+                ExtentReporter.NodeError($"{keyword} | {details} | Expected: unavailable | Actual: unavailable | Exception: {exception.Message}");
             }
         }
     }
@@ -193,134 +330,85 @@ namespace KeywordDriven.ActionKeywords
     {
         #region Keywords methods
 
-        public static void AssertElementExists(String obj, String data) =>
-            Assertions.Run(nameof(AssertElementExists), obj, () => Assertions.FindElement(Drivers.driver, Locators.GetLocator(obj)) != null);
-
-        public static void AssertElementNotExists(String obj, String data) =>
-            Assertions.Run(nameof(AssertElementNotExists), obj, () => Assertions.FindElement(Drivers.driver, Locators.GetLocator(obj)) == null);
-
-        public static void AssertElementVisible(String obj, String data) =>
-            Assertions.Run(nameof(AssertElementVisible), obj, () => Assertions.AssertElementState(obj, element => element.Displayed));
-
-        public static void AssertElementNotVisible(String obj, String data) =>
-            Assertions.Run(nameof(AssertElementNotVisible), obj, () =>
-            {
-                IWebElement element = Assertions.FindElement(Drivers.driver, Locators.GetLocator(obj));
-                return element == null || !element.Displayed;
-            });
-
-        public static void AssertElementEditable(String obj, String data) =>
-            Assertions.Run(nameof(AssertElementEditable), obj, () => Assertions.AssertElementState(obj, Assertions.IsEditable));
-
-        public static void AssertElementNotEditable(String obj, String data) =>
-            Assertions.Run(nameof(AssertElementNotEditable), obj, () => Assertions.AssertElementState(obj, element => !Assertions.IsEditable(element)));
-
-        public static void AssertElementEnabled(String obj, String data) =>
-            Assertions.Run(nameof(AssertElementEnabled), obj, () => Assertions.AssertElementState(
-                obj, element => element.Enabled && element.GetAttribute("aria-disabled") != "true"));
-
-        public static void AssertElementDisabled(String obj, String data) =>
-            Assertions.Run(nameof(AssertElementDisabled), obj, () => Assertions.AssertElementState(
-                obj, element => !element.Enabled || element.GetAttribute("aria-disabled") == "true"));
-
-        public static void AssertElementContainsText(String obj, String data) =>
-            Assertions.Run(nameof(AssertElementContainsText), obj, () => Assertions.AssertElementMatch(obj, data, "contains"));
-
-        public static void AssertElementHaveAttribute(String obj, String data) =>
-            Assertions.Run(nameof(AssertElementHaveAttribute), obj, () => Assertions.AssertAttribute(obj, data, shouldExist: true));
-
-        public static void AssertElementNotHaveAttribute(String obj, String data) =>
-            Assertions.Run(nameof(AssertElementNotHaveAttribute), obj, () => Assertions.AssertAttribute(obj, data, shouldExist: false));
-
-        public static void AssertElementNotContainsText(String obj, String data) =>
-            Assertions.Run(nameof(AssertElementNotContainsText), obj, () => Assertions.AssertElementMatch(obj, data, "notcontains"));
-
-        public static void AssertElementHaveText(String obj, String data) =>
-            Assertions.Run(nameof(AssertElementHaveText), obj, () => Assertions.AssertElementMatch(obj, data, "exact"));
-
-        public static void AssertElementNotHaveText(String obj, String data) =>
-            Assertions.Run(nameof(AssertElementNotHaveText), obj, () => Assertions.AssertElementMatch(obj, data, "notequal"));
-
-        public static void AssertElementTextStartsWith(String obj, String data) =>
-            Assertions.Run(nameof(AssertElementTextStartsWith), obj, () => Assertions.AssertElementMatch(obj, data, "startswith"));
-
-        public static void AssertElementTextEndsWith(String obj, String data) =>
-            Assertions.Run(nameof(AssertElementTextEndsWith), obj, () => Assertions.AssertElementMatch(obj, data, "endswith"));
-
-        public static void AssertElementTextMatchesPattern(String obj, String data) =>
-             Assertions.Run(nameof(AssertElementTextMatchesPattern), obj, () => Assertions.AssertElementMatch(obj, data, "regex"));
-
-        public static void AssertElementFocused(String obj, String data) =>
-            Assertions.Run(nameof(AssertElementFocused), obj, () =>
-            {
-                IWebElement element = Assertions.FindElement(Drivers.driver, Locators.GetLocator(obj));
-                return element != null && element.Equals(Drivers.driver.SwitchTo().ActiveElement());
-            });
-
-        public static void AssertElementHaveAriaRole(String obj, String data) =>
-            Assertions.Run(nameof(AssertElementHaveAriaRole), obj, () =>
-                Assertions.AssertElementState(obj, element =>
-                    string.Equals(element.GetAttribute("role"), data, StringComparison.Ordinal)));
-
-        public static void AssertElementNotHaveAriaRole(String obj, String data) =>
-            Assertions.Run(nameof(AssertElementNotHaveAriaRole), obj, () =>
-                Assertions.AssertElementState(obj, element =>
-                    !string.Equals(element.GetAttribute("role"), data, StringComparison.Ordinal)));
-
-        public static void AssertSelectedText(String obj, String data) =>
-            Assertions.Run(nameof(AssertSelectedText), obj, () => Assertions.AssertSelectedOption(obj, data, "text"));
-
-        public static void AssertSelectedValue(String obj, String data) =>
-            Assertions.Run(nameof(AssertSelectedValue), obj, () => Assertions.AssertSelectedOption(obj, data, "value"));
-
-        public static void AssertSelectedIndex(String obj, String data) =>
-            Assertions.Run(nameof(AssertSelectedIndex), obj, () => Assertions.AssertSelectedOption(obj, data, "index"));
-
-        public static void AssertCheckboxChecked(String obj, String data) =>
-            Assertions.Run(nameof(AssertCheckboxChecked), obj, () => Assertions.AssertElementState(
-                obj, element => Assertions.HasExpectedSelection(element, "checkbox", selected: true)));
-
-        public static void AssertCheckboxNotChecked(String obj, String data) =>
-            Assertions.Run(nameof(AssertCheckboxNotChecked), obj, () => Assertions.AssertElementState(
-                obj, element => Assertions.HasExpectedSelection(element, "checkbox", selected: false)));
-
-        public static void AssertRadioSelected(String obj, String data) =>
-            Assertions.Run(nameof(AssertRadioSelected), obj, () => Assertions.AssertElementState(
-                obj, element => Assertions.HasExpectedSelection(element, "radio", selected: true)));
-
-        public static void AssertRadioNotSelected(String obj, String data) =>
-            Assertions.Run(nameof(AssertRadioNotSelected), obj, () => Assertions.AssertElementState(
-                obj, element => Assertions.HasExpectedSelection(element, "radio", selected: false)));
-
-        public static void AssertPageContainsTitle(String obj, String data) =>
-            Assertions.Run(nameof(AssertPageContainsTitle), data, () => Assertions.AssertPageMatch(Drivers.driver.Title, data, "contains"));
-
-        public static void AssertPageNotContainsTitle(String obj, String data) =>
-            Assertions.Run(nameof(AssertPageNotContainsTitle), data, () => Assertions.AssertPageMatch(Drivers.driver.Title, data, "notcontains"));
-
-        public static void AssertPageHaveTitle(String obj, String data) =>
-            Assertions.Run(nameof(AssertPageHaveTitle), data, () => Assertions.AssertPageMatch(Drivers.driver.Title, data, "exact"));
-
-        public static void AssertPageNotHaveTitle(String obj, String data) =>
-            Assertions.Run(nameof(AssertPageNotHaveTitle), data, () => Assertions.AssertPageMatch(Drivers.driver.Title, data, "notequal"));
-
-        public static void AssertPageContainsUrl(String obj, String data) =>
-            Assertions.Run(nameof(AssertPageContainsUrl), data, () => Assertions.AssertUrlMatch(data, "contains"));
-
-        public static void AssertPageNotContainsUrl(String obj, String data) =>
-            Assertions.Run(nameof(AssertPageNotContainsUrl), data, () => Assertions.AssertUrlMatch(data, "notcontains"));
-
-        public static void AssertPageHaveUrl(String obj, String data) =>
-            Assertions.Run(nameof(AssertPageHaveUrl), data, () => Assertions.AssertUrlMatch(data, "exact"));
-
-        public static void AssertPageUrlStartsWith(String obj, String data) =>
-            Assertions.Run(nameof(AssertPageUrlStartsWith), data, () => Assertions.AssertUrlMatch(data, "startswith"));
-
-        public static void AssertPageUrlEndsWith(String obj, String data) =>
-            Assertions.Run(nameof(AssertPageUrlEndsWith), data, () => Assertions.AssertUrlMatch(data, "endswith"));
-
-        public static void AssertPageUrlMatchesPattern(String obj, String data) =>
-            Assertions.Run(nameof(AssertPageUrlMatchesPattern), data, () => Assertions.AssertUrlMatch(data, "regex"));
+        public static void AssertElementExists(string obj, string data) =>
+            Assertions.Run(nameof(AssertElementExists), obj, () => Assertions.EvaluateElementExists(obj, shouldExist: true));
+        public static void AssertElementNotExists(string obj, string data) =>
+            Assertions.Run(nameof(AssertElementNotExists), obj, () => Assertions.EvaluateElementExists(obj, shouldExist: false));
+        public static void AssertElementVisible(string obj, string data) =>
+            Assertions.RunAssertionElementState(nameof(AssertElementVisible), obj, "true", element => element.Displayed, element => Assertions.AssertionBooleanValue(element.Displayed));
+        public static void AssertElementNotVisible(string obj, string data) =>
+            Assertions.RunAssertionElementState(nameof(AssertElementNotVisible), obj, "false", element => !element.Displayed, element => Assertions.AssertionBooleanValue(element.Displayed), missingIsPass: true);
+        public static void AssertElementEditable(string obj, string data) =>
+            Assertions.RunAssertionElementState(nameof(AssertElementEditable), obj, "editable", Assertions.IsEditable, element => Assertions.IsEditable(element) ? "editable" : "not editable");
+        public static void AssertElementNotEditable(string obj, string data) =>
+            Assertions.RunAssertionElementState(nameof(AssertElementNotEditable), obj, "not editable", element => !Assertions.IsEditable(element), element => Assertions.IsEditable(element) ? "editable" : "not editable");
+        public static void AssertElementEnabled(string obj, string data) =>
+            Assertions.RunAssertionElementState(nameof(AssertElementEnabled), obj, "enabled", element => element.Enabled && element.GetAttribute("aria-disabled") != "true",
+                element => element.Enabled && element.GetAttribute("aria-disabled") != "true" ? "enabled" : "disabled");
+        public static void AssertElementDisabled(string obj, string data) =>
+            Assertions.RunAssertionElementState(nameof(AssertElementDisabled), obj, "disabled", element => !element.Enabled || element.GetAttribute("aria-disabled") == "true",
+                element => !element.Enabled || element.GetAttribute("aria-disabled") == "true" ? "disabled" : "enabled");
+        public static void AssertElementContainsText(string obj, string data) =>
+            Assertions.Run(nameof(AssertElementContainsText), obj, () => Assertions.EvaluateElementMatch(obj, data, "contains"));
+        public static void AssertElementHaveAttribute(string obj, string data) =>
+            Assertions.Run(nameof(AssertElementHaveAttribute), obj, () => Assertions.EvaluateAttribute(obj, data, shouldExist: true));
+        public static void AssertElementNotHaveAttribute(string obj, string data) =>
+            Assertions.Run(nameof(AssertElementNotHaveAttribute), obj, () => Assertions.EvaluateAttribute(obj, data, shouldExist: false));
+        public static void AssertElementNotContainsText(string obj, string data) =>
+            Assertions.Run(nameof(AssertElementNotContainsText), obj, () => Assertions.EvaluateElementMatch(obj, data, "notcontains"));
+        public static void AssertElementHaveText(string obj, string data) =>
+            Assertions.Run(nameof(AssertElementHaveText), obj, () => Assertions.EvaluateElementMatch(obj, data, "exact"));
+        public static void AssertElementNotHaveText(string obj, string data) =>
+            Assertions.Run(nameof(AssertElementNotHaveText), obj, () => Assertions.EvaluateElementMatch(obj, data, "notequal"));
+        public static void AssertElementTextStartsWith(string obj, string data) =>
+            Assertions.Run(nameof(AssertElementTextStartsWith), obj, () => Assertions.EvaluateElementMatch(obj, data, "startswith"));
+        public static void AssertElementTextEndsWith(string obj, string data) =>
+            Assertions.Run(nameof(AssertElementTextEndsWith), obj, () => Assertions.EvaluateElementMatch(obj, data, "endswith"));
+        public static void AssertElementTextMatchesPattern(string obj, string data) =>
+            Assertions.Run(nameof(AssertElementTextMatchesPattern), obj, () => Assertions.EvaluateElementMatch(obj, data, "regex"));
+        public static void AssertElementFocused(string obj, string data) =>
+            Assertions.RunAssertionElementState(nameof(AssertElementFocused), obj, "focused",
+                element => element.Equals(Drivers.driver.SwitchTo().ActiveElement()),
+                element => element.Equals(Drivers.driver.SwitchTo().ActiveElement()) ? "focused" : "not focused");
+        public static void AssertElementHaveAriaRole(string obj, string data) =>
+            Assertions.RunAssertionElementState(nameof(AssertElementHaveAriaRole), obj, data,
+                element => string.Equals(element.GetAttribute("role"), data, StringComparison.Ordinal),
+                element => element.GetAttribute("role") ?? "<missing>");
+        public static void AssertElementNotHaveAriaRole(string obj, string data) =>
+            Assertions.RunAssertionElementState(nameof(AssertElementNotHaveAriaRole), obj, $"not {data}",
+                element => !string.Equals(element.GetAttribute("role"), data, StringComparison.Ordinal),
+                element => element.GetAttribute("role") ?? "<missing>");
+        public static void AssertSelectedText(string obj, string data) =>
+            Assertions.Run(nameof(AssertSelectedText), obj, () => Assertions.EvaluateSelectedOption(obj, data, "text"));
+        public static void AssertSelectedValue(string obj, string data) =>
+            Assertions.Run(nameof(AssertSelectedValue), obj, () => Assertions.EvaluateSelectedOption(obj, data, "value"));
+        public static void AssertSelectedIndex(string obj, string data) =>
+            Assertions.Run(nameof(AssertSelectedIndex), obj, () => Assertions.EvaluateSelectedOption(obj, data, "index"));       
+        public static void AssertCheckboxChecked(string obj, string data) => Assertions.RunAssertionSelection(nameof(AssertCheckboxChecked), obj, "checkbox", true);
+        public static void AssertCheckboxNotChecked(string obj, string data) => Assertions.RunAssertionSelection(nameof(AssertCheckboxNotChecked), obj, "checkbox", false);
+        public static void AssertRadioSelected(string obj, string data) => Assertions.RunAssertionSelection(nameof(AssertRadioSelected), obj, "radio", true);
+        public static void AssertRadioNotSelected(string obj, string data) => Assertions.RunAssertionSelection(nameof(AssertRadioNotSelected), obj, "radio", false);
+        public static void AssertPageContainsTitle(string obj, string data) =>
+            Assertions.Run(nameof(AssertPageContainsTitle), data, () => Assertions.EvaluatePageMatch(Drivers.driver.Title, data, "contains"));
+        public static void AssertPageNotContainsTitle(string obj, string data) =>
+            Assertions.Run(nameof(AssertPageNotContainsTitle), data, () => Assertions.EvaluatePageMatch(Drivers.driver.Title, data, "notcontains"));
+        public static void AssertPageHaveTitle(string obj, string data) =>
+            Assertions.Run(nameof(AssertPageHaveTitle), data, () => Assertions.EvaluatePageMatch(Drivers.driver.Title, data, "exact"));
+        public static void AssertPageNotHaveTitle(string obj, string data) =>
+            Assertions.Run(nameof(AssertPageNotHaveTitle), data, () => Assertions.EvaluatePageMatch(Drivers.driver.Title, data, "notequal"));
+        public static void AssertPageContainsUrl(string obj, string data) =>
+            Assertions.Run(nameof(AssertPageContainsUrl), data, () => Assertions.EvaluateUrlMatch(data, "contains"));
+        public static void AssertPageNotContainsUrl(string obj, string data) =>
+            Assertions.Run(nameof(AssertPageNotContainsUrl), data, () => Assertions.EvaluateUrlMatch(data, "notcontains"));
+        public static void AssertPageHaveUrl(string obj, string data) =>
+            Assertions.Run(nameof(AssertPageHaveUrl), data, () => Assertions.EvaluateUrlMatch(data, "exact"));
+        public static void AssertPageUrlStartsWith(string obj, string data) =>
+            Assertions.Run(nameof(AssertPageUrlStartsWith), data, () => Assertions.EvaluateUrlMatch(data, "startswith"));
+        public static void AssertPageUrlEndsWith(string obj, string data) =>
+            Assertions.Run(nameof(AssertPageUrlEndsWith), data, () => Assertions.EvaluateUrlMatch(data, "endswith"));
+        public static void AssertPageUrlMatchesPattern(string obj, string data) =>
+            Assertions.Run(nameof(AssertPageUrlMatchesPattern), data, () => Assertions.EvaluateUrlMatch(data, "regex"));
+        
         #endregion
     }
 }

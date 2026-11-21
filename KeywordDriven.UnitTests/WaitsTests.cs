@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using KeywordDriven.ActionKeywords;
 using Moq;
 using OpenQA.Selenium;
+using Assert = NUnit.Framework.Assert;
 
 namespace KeywordDriven.UnitTests;
 

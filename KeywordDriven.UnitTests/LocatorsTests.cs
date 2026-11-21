@@ -4,6 +4,7 @@ using KeywordDriven.Config;
 using KeywordDriven.Execution;
 using Moq;
 using OpenQA.Selenium;
+using Assert = NUnit.Framework.Assert;
 
 namespace KeywordDriven.UnitTests;
 

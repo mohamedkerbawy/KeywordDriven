@@ -31,7 +31,8 @@ namespace KeywordDriven.Utils
                 if (!Directory.Exists(PathSetting.Path_ScreenShotsDir))
                 {
                     Directory.CreateDirectory((PathSetting.Path_ScreenShotsDir));
-                    Console.WriteLine($"Created screenshot folder | {PathSetting.Path_ScreenShotsDir}");
+
+                    Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{"DEBUG",-5}] Created screenshot folder | {PathSetting.Path_ScreenShotsDir}");
                 }
 
                 // Auto-generate filename if not provided
@@ -53,19 +54,19 @@ namespace KeywordDriven.Utils
                 // Save to disk
                 screenshot.SaveAsFile(fullPath);
 
-                Console.WriteLine($"Screenshot saved to | {fullPath}");
+                Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{"DEBUG",-5}] Screenshot saved | {fullPath}");
 
                 // Return path
                 return fullPath;
             }
             catch (InvalidOperationException ex)
             {
-                Console.WriteLine($"TakeScreenshot | {ex.Message}");
+                Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{"DEBUG",-5}] TakeScreenshot | {ex.Message}");
                 throw;
             }
             catch (ArgumentException ex)
             {
-                Console.WriteLine($"TakeScreenshot | {ex.Message}");
+                Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{"DEBUG",-5}] TakeScreenshot | {ex.Message}");
                 throw;
             }
             catch (Exception ex)
@@ -94,7 +95,7 @@ namespace KeywordDriven.Utils
                 if (!Directory.Exists(PathSetting.Path_ScreenShotsDir))
                 {
                     Directory.CreateDirectory(PathSetting.Path_ScreenShotsDir);
-                    Console.WriteLine($"Created screenshot folder | {PathSetting.Path_ScreenShotsDir}");
+                    Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{"DEBUG",-5}] Created screenshot folder | {PathSetting.Path_ScreenShotsDir}");
                 }
 
                 // Auto-generate filename if not provided
@@ -116,18 +117,18 @@ namespace KeywordDriven.Utils
                 // Save to disk
                 elementScreenshot.SaveAsFile(fullPath);
 
-                Console.WriteLine($"Screenshot saved to | {fullPath}");
+                Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{"DEBUG",-5}] Screenshot saved | {fullPath}");
 
                 return fullPath;
             }
             catch (InvalidOperationException ex)
             {
-                Console.WriteLine($"TakeElementScreenshot | {ex.Message}");
+                Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{"DEBUG",-5}] TakeElementScreenshot | {ex.Message}");
                 throw;
             }
             catch (ArgumentException ex)
             {
-                Console.WriteLine($"TakeElementScreenshot | {ex.Message}");
+                Console.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{"DEBUG",-5}] TakeElementScreenshot | {ex.Message}");
                 throw;
             }
             catch (Exception ex)

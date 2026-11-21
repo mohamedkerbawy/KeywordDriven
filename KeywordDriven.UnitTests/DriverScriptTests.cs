@@ -1,6 +1,7 @@
 using ClosedXML.Excel;
 using KeywordDriven.Execution;
 using KeywordDriven.Utils;
+using Assert = NUnit.Framework.Assert;
 
 namespace KeywordDriven.UnitTests;
 
@@ -24,6 +25,14 @@ public class DriverScriptTests : ActionKeywordTestBase
             testCases.Cell(2, 2).Value = "Unknown action";
             testCases.Cell(2, 3).Value = "Triggers keyword dispatch error";
             testCases.Cell(2, 4).Value = "Yes";
+            testCases.Cell(3, 1).Value = "TS2";
+            testCases.Cell(3, 2).Value = "No steps";
+            testCases.Cell(3, 3).Value = "Passes without executing steps";
+            testCases.Cell(3, 4).Value = "Yes";
+            testCases.Cell(4, 1).Value = "TS3";
+            testCases.Cell(4, 2).Value = "Disabled case";
+            testCases.Cell(4, 3).Value = "Should be skipped";
+            testCases.Cell(4, 4).Value = "No";
 
             IXLWorksheet testSteps = workbook.AddWorksheet("TestSteps");
             testSteps.Cell(1, 1).Value = "TestCaseID";
@@ -42,11 +51,11 @@ public class DriverScriptTests : ActionKeywordTestBase
 
         TextWriter originalOutput = Console.Out;
         using var output = new StringWriter();
-        bool allTestCasesPassed;
+        TestCaseExecutionSummary summary;
         try
         {
             Console.SetOut(output);
-            allTestCasesPassed = DriverScript.Execute_TestCases();
+            summary = DriverScript.Execute_TestCasesWithSummary();
         }
         finally
         {
@@ -60,6 +69,15 @@ public class DriverScriptTests : ActionKeywordTestBase
 
         Assert.That(caseEndMessages, Has.Length.EqualTo(1));
         Assert.That(caseEndMessages[0], Does.Contain("Result: ERROR"));
-        Assert.That(allTestCasesPassed, Is.False);
+        Assert.Multiple(() =>
+        {
+            Assert.That(summary.Total, Is.EqualTo(3));
+            Assert.That(summary.Passed, Is.EqualTo(1));
+            Assert.That(summary.Failed, Is.Zero);
+            Assert.That(summary.Errors, Is.EqualTo(1));
+            Assert.That(summary.Skipped, Is.EqualTo(1));
+            Assert.That(summary.AllPassed, Is.False);
+            Assert.That(summary.ToString(), Does.Contain("All: 3 | Passed: 1 | Failed: 0 | Error: 1 | Skipped: 1"));
+        });
     }
 }
